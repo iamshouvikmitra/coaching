@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JS Quest — Learn JavaScript by Doing</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700;900&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0f0f1a;
+      --surface: #1a1a2e;
+      --surface2: #22223a;
+      --accent: #7c3aed;
+      --accent-glow: #a78bfa;
+      --green: #10b981;
+      --green-glow: #34d399;
+      --red: #ef4444;
+      --orange: #f59e0b;
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+      --code-bg: #0d1117;
+      --border: #2d2d44;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Top Bar ── */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 16px; }
+    .logo {
+      font-weight: 900;
+      font-size: 1.3rem;
+      background: linear-gradient(135deg, var(--accent-glow), var(--green-glow));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .xp-bar-container {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .xp-label {
+      font-size: 0.8rem; color: var(--orange); font-weight: 700;
+    }
+    .xp-bar-track {
+      width: 140px; height: 8px; background: var(--surface2);
+      border-radius: 4px; overflow: hidden;
+    }
+    .xp-bar-fill {
+      height: 100%; background: linear-gradient(90deg, var(--orange), #fbbf24);
+      border-radius: 4px; transition: width 0.6s ease;
+    }
+    .streak-badge {
+      background: var(--surface2); padding: 4px 12px; border-radius: 20px;
+      font-size: 0.8rem; font-weight: 600; color: var(--orange);
+    }
+    .topbar-right { display: flex; gap: 10px; }
+    .btn-small {
+      padding: 6px 14px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--surface2); color: var(--text-dim); cursor: pointer;
+      font-size: 0.8rem; font-weight: 600; transition: all 0.2s;
+    }
+    .btn-small:hover { border-color: var(--accent); color: var(--text); }
+
+    /* ── World Map ── */
+    .world-map {
+      max-width: 900px; margin: 40px auto; padding: 0 20px;
+    }
+    .world-title {
+      text-align: center; margin-bottom: 32px;
+    }
+    .world-title h2 { font-size: 1.8rem; margin-bottom: 4px; }
+    .world-title p { color: var(--text-dim); }
+
+    .level-path {
+      display: flex; flex-direction: column; align-items: center; gap: 12px;
+    }
+    .level-node {
+      width: 280px; padding: 16px 20px; background: var(--surface);
+      border: 2px solid var(--border); border-radius: 16px;
+      cursor: pointer; transition: all 0.3s; position: relative;
+      display: flex; align-items: center; gap: 14px;
+    }
+    .level-node:hover { transform: translateY(-2px); border-color: var(--accent); }
+    .level-node.completed { border-color: var(--green); }
+    .level-node.completed .level-icon { background: var(--green); }
+    .level-node.locked { opacity: 0.4; cursor: not-allowed; }
+    .level-node.locked:hover { transform: none; border-color: var(--border); }
+    .level-node.current { border-color: var(--accent); box-shadow: 0 0 20px rgba(124,58,237,0.3); }
+    .level-icon {
+      width: 44px; height: 44px; border-radius: 12px;
+      background: var(--accent); display: flex; align-items: center;
+      justify-content: center; font-size: 1.4rem; flex-shrink: 0;
+    }
+    .level-info h3 { font-size: 0.95rem; margin-bottom: 2px; }
+    .level-info p { font-size: 0.75rem; color: var(--text-dim); }
+    .level-stars { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 0.85rem; }
+    .connector { width: 2px; height: 20px; background: var(--border); }
+    .connector.completed { background: var(--green); }
+
+    /* ── Challenge View ── */
+    .challenge-view {
+      display: none; max-width: 900px; margin: 0 auto; padding: 20px;
+    }
+    .challenge-view.active { display: block; }
+
+    .challenge-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 24px;
+    }
+    .back-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: none; border: none; color: var(--text-dim);
+      cursor: pointer; font-size: 0.9rem; font-weight: 600;
+    }
+    .back-btn:hover { color: var(--text); }
+    .challenge-progress-dots { display: flex; gap: 6px; }
+    .progress-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--surface2); border: 1px solid var(--border);
+    }
+    .progress-dot.done { background: var(--green); border-color: var(--green); }
+    .progress-dot.active { background: var(--accent); border-color: var(--accent); }
+
+    /* ── Story Card ── */
+    .story-card {
+      background: linear-gradient(135deg, var(--surface), var(--surface2));
+      border: 1px solid var(--border); border-radius: 16px;
+      padding: 24px; margin-bottom: 24px;
+    }
+    .story-card .emoji { font-size: 2rem; margin-bottom: 8px; display: block; }
+    .story-card h2 { font-size: 1.3rem; margin-bottom: 8px; }
+    .story-card p { color: var(--text-dim); line-height: 1.6; }
+    .story-card code {
+      background: var(--code-bg); padding: 2px 6px; border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.85em;
+      color: var(--accent-glow);
+    }
+
+    /* ── Concept Teach Block ── */
+    .teach-block {
+      background: var(--code-bg); border: 1px solid var(--border);
+      border-radius: 12px; padding: 20px; margin-bottom: 24px;
+    }
+    .teach-block h3 {
+      color: var(--green-glow); font-size: 0.85rem; text-transform: uppercase;
+      letter-spacing: 1px; margin-bottom: 12px;
+    }
+    .teach-block pre {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;
+      line-height: 1.7; color: var(--text); overflow-x: auto;
+    }
+    .teach-block .highlight { color: var(--accent-glow); }
+    .teach-block .comment { color: #6b7280; }
+    .teach-block .string { color: var(--green-glow); }
+    .teach-block .keyword { color: #f472b6; }
+    .teach-block .number { color: var(--orange); }
+
+    /* ── Challenge Card ── */
+    .challenge-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; padding: 24px; margin-bottom: 16px;
+    }
+    .challenge-card h3 { margin-bottom: 12px; font-size: 1.1rem; }
+    .challenge-card p { color: var(--text-dim); margin-bottom: 16px; line-height: 1.5; }
+
+    /* ── Code Editor ── */
+    .code-editor-wrap {
+      position: relative; margin-bottom: 16px;
+    }
+    .code-editor {
+      width: 100%; min-height: 120px; padding: 16px;
+      background: var(--code-bg); border: 2px solid var(--border);
+      border-radius: 12px; color: var(--text);
+      font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;
+      line-height: 1.6; resize: vertical; outline: none;
+      transition: border-color 0.3s;
+    }
+    .code-editor:focus { border-color: var(--accent); }
+    .code-editor.correct { border-color: var(--green); }
+    .code-editor.wrong { border-color: var(--red); animation: shake 0.4s; }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-6px); }
+      75% { transform: translateX(6px); }
+    }
+
+    /* ── MCQ Options ── */
+    .mcq-options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+    .mcq-option {
+      padding: 14px 18px; background: var(--surface2);
+      border: 2px solid var(--border); border-radius: 12px;
+      cursor: pointer; font-size: 0.9rem; transition: all 0.2s;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .mcq-option:hover { border-color: var(--accent); background: rgba(124,58,237,0.1); }
+    .mcq-option.selected { border-color: var(--accent); background: rgba(124,58,237,0.15); }
+    .mcq-option.correct { border-color: var(--green); background: rgba(16,185,129,0.15); }
+    .mcq-option.wrong { border-color: var(--red); background: rgba(239,68,68,0.1); }
+
+    /* ── Fill Blanks ── */
+    .fill-blank-input {
+      display: inline-block; width: 120px; padding: 4px 8px;
+      background: var(--code-bg); border: 2px solid var(--border);
+      border-radius: 6px; color: var(--accent-glow);
+      font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;
+      text-align: center; outline: none;
+    }
+    .fill-blank-input:focus { border-color: var(--accent); }
+    .fill-blank-input.correct { border-color: var(--green); }
+    .fill-blank-input.wrong { border-color: var(--red); }
+
+    /* ── Output Console ── */
+    .output-console {
+      background: #000; border-radius: 10px; padding: 14px;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
+      color: var(--green-glow); margin-bottom: 16px;
+      min-height: 40px; border: 1px solid #222;
+    }
+    .output-console .error { color: var(--red); }
+    .output-console .log { color: var(--text-dim); }
+
+    /* ── Buttons ── */
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      padding: 10px 24px; border-radius: 10px; border: none;
+      font-weight: 700; font-size: 0.9rem; cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #6d28d9);
+      color: white;
+    }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(124,58,237,0.4); }
+    .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--accent); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+
+    /* ── Feedback ── */
+    .feedback {
+      padding: 14px 18px; border-radius: 12px; margin-top: 16px;
+      font-weight: 600; display: none;
+    }
+    .feedback.show { display: block; animation: fadeIn 0.3s; }
+    .feedback.success {
+      background: rgba(16,185,129,0.15); border: 1px solid var(--green);
+      color: var(--green-glow);
+    }
+    .feedback.error {
+      background: rgba(239,68,68,0.1); border: 1px solid var(--red);
+      color: #fca5a5;
+    }
+    .feedback .hint { font-weight: 400; color: var(--text-dim); margin-top: 6px; font-size: 0.85rem; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Celebration ── */
+    .celebration-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      display: none; align-items: center; justify-content: center;
+      z-index: 200;
+    }
+    .celebration-overlay.show { display: flex; }
+    .celebration-box {
+      background: var(--surface); border: 2px solid var(--green);
+      border-radius: 24px; padding: 40px; text-align: center;
+      max-width: 400px; animation: popIn 0.4s ease;
+    }
+    @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .celebration-box .big-emoji { font-size: 4rem; margin-bottom: 16px; display: block; }
+    .celebration-box h2 { font-size: 1.5rem; margin-bottom: 8px; color: var(--green-glow); }
+    .celebration-box p { color: var(--text-dim); margin-bottom: 20px; }
+    .celebration-box .xp-earned { font-size: 1.2rem; color: var(--orange); font-weight: 700; margin-bottom: 16px; }
+
+    /* ── Particles ── */
+    .particle {
+      position: fixed; pointer-events: none; z-index: 300;
+      animation: particleFall 1.5s ease-out forwards;
+    }
+    @keyframes particleFall {
+      0% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+      100% { opacity: 0; transform: translateY(300px) rotate(720deg) scale(0); }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .topbar { flex-wrap: wrap; gap: 8px; }
+      .level-node { width: 100%; }
+      .world-map { padding: 0 12px; }
+      .challenge-view { padding: 12px; }
+    }
+
+    /* ── Reorder puzzle ── */
+    .reorder-container { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+    .reorder-item {
+      padding: 12px 16px; background: var(--surface2); border: 2px solid var(--border);
+      border-radius: 10px; cursor: grab; font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem; user-select: none; transition: all 0.2s;
+    }
+    .reorder-item:active { cursor: grabbing; }
+    .reorder-item.dragging { opacity: 0.5; border-color: var(--accent); }
+    .reorder-item.over { border-color: var(--accent-glow); transform: scale(1.02); }
+    .reorder-item .line-num {
+      display: inline-block; width: 24px; color: var(--text-dim); font-size: 0.75rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ─── Top Bar ─── -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">JS Quest</div>
+    <div class="xp-bar-container">
+      <span class="xp-label" id="xpLabel">0 XP</span>
+      <div class="xp-bar-track"><div class="xp-bar-fill" id="xpBar" style="width:0%"></div></div>
+    </div>
+    <div class="streak-badge" id="streakBadge" style="display:none"></div>
+  </div>
+  <div class="topbar-right">
+    <button class="btn-small" onclick="resetProgress()">Reset Progress</button>
+  </div>
+</div>
+
+<!-- ─── World Map ─── -->
+<div class="world-map" id="worldMap">
+  <div class="world-title">
+    <h2>Your JavaScript Journey</h2>
+    <p>Master JS one challenge at a time</p>
+  </div>
+  <div class="level-path" id="levelPath"></div>
+</div>
+
+<!-- ─── Challenge View ─── -->
+<div class="challenge-view" id="challengeView">
+  <div class="challenge-header">
+    <button class="back-btn" onclick="showMap()">&#8592; Back to Map</button>
+    <div class="challenge-progress-dots" id="progressDots"></div>
+  </div>
+  <div id="challengeContent"></div>
+</div>
+
+<!-- ─── Celebration Overlay ─── -->
+<div class="celebration-overlay" id="celebration">
+  <div class="celebration-box">
+    <span class="big-emoji" id="celEmoji"></span>
+    <h2 id="celTitle"></h2>
+    <p id="celDesc"></p>
+    <div class="xp-earned" id="celXP"></div>
+    <button class="btn btn-primary" onclick="closeCelebration()">Continue</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  JS QUEST — GAME ENGINE + LEVEL DATA
+// ═══════════════════════════════════════════
+
+const STORAGE_KEY = 'jsquest_save';
+
+// ── State ──
+let state = loadState();
+
+function defaultState() {
+  return { xp: 0, completedLevels: {}, levelStars: {}, streak: 0, lastPlayedDate: null };
+}
+
+function loadState() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (saved) return { ...defaultState(), ...saved };
+  } catch(e) {}
+  return defaultState();
+}
+
+function saveState() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function resetProgress() {
+  if (confirm('Reset all progress? This cannot be undone!')) {
+    state = defaultState();
+    saveState();
+    showMap();
+    updateTopBar();
+  }
+}
+
+// ── XP System ──
+function addXP(amount) {
+  state.xp += amount;
+  saveState();
+  updateTopBar();
+}
+
+function updateTopBar() {
+  const level = Math.floor(state.xp / 100) + 1;
+  const xpInLevel = state.xp % 100;
+  document.getElementById('xpLabel').textContent = `${state.xp} XP (Lvl ${level})`;
+  document.getElementById('xpBar').style.width = `${xpInLevel}%`;
+
+  const completedCount = Object.keys(state.completedLevels).length;
+  if (completedCount >= 2) {
+    document.getElementById('streakBadge').style.display = 'inline';
+    document.getElementById('streakBadge').textContent = `${completedCount} levels done`;
+  }
+}
+
+// ── Particles ──
+function spawnParticles() {
+  const emojis = ['🎉','⭐','🚀','✨','💎','🔥'];
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    p.style.left = Math.random() * window.innerWidth + 'px';
+    p.style.top = Math.random() * window.innerHeight * 0.3 + 'px';
+    p.style.fontSize = (16 + Math.random() * 20) + 'px';
+    p.style.animationDelay = Math.random() * 0.5 + 's';
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 2000);
+  }
+}
+
+function showCelebration(emoji, title, desc, xp) {
+  document.getElementById('celEmoji').textContent = emoji;
+  document.getElementById('celTitle').textContent = title;
+  document.getElementById('celDesc').textContent = desc;
+  document.getElementById('celXP').textContent = `+${xp} XP`;
+  document.getElementById('celebration').classList.add('show');
+  spawnParticles();
+}
+
+function closeCelebration() {
+  document.getElementById('celebration').classList.remove('show');
+  showMap();
+}
+
+// ═══════════════════════════════════════════
+//  LEVEL DEFINITIONS
+// ═══════════════════════════════════════════
+
+const LEVELS = [
+  // ── LEVEL 1: Variables ──
+  {
+    id: 'variables',
+    icon: '📦',
+    title: 'Variables — Your First Boxes',
+    desc: 'Learn let, const, and how to store values',
+    xp: 30,
+    challenges: [
+      {
+        type: 'story',
+        emoji: '📦',
+        title: 'Welcome, Coder!',
+        body: `Think of <code>variables</code> as labeled boxes. You put a value inside, and later you can open the box to use it.\n\nIn JavaScript, we create boxes using <code>let</code> (can change) or <code>const</code> (stays the same).`
+      },
+      {
+        type: 'teach',
+        heading: 'How to create variables',
+        code: `<span class="keyword">let</span> playerName = <span class="string">"Harshad"</span>;    <span class="comment">// can change later</span>\n<span class="keyword">const</span> maxLives = <span class="number">3</span>;            <span class="comment">// cannot change</span>\n\nplayerName = <span class="string">"Hero"</span>;             <span class="comment">// ✅ works — let allows reassignment</span>\n<span class="comment">// maxLives = 5;                 // ❌ error — const cannot be reassigned</span>`
+      },
+      {
+        type: 'mcq',
+        question: 'Which keyword creates a variable that CANNOT be reassigned?',
+        options: ['var', 'let', 'const', 'fixed'],
+        correct: 2,
+        hint: 'const is short for "constant" — it stays the same!'
+      },
+      {
+        type: 'fill',
+        question: 'Complete the code to store the number 42:',
+        codeBefore: '',
+        codeAfter: ' answer = 42;',
+        blank: 'let',
+        accept: ['let', 'const'],
+        hint: 'Use let or const to declare a variable'
+      },
+      {
+        type: 'mcq',
+        question: 'What will this print?\n\nlet x = 10;\nx = x + 5;\nconsole.log(x);',
+        options: ['10', '15', '5', 'Error'],
+        correct: 1,
+        hint: 'x starts at 10, then gets reassigned to 10 + 5'
+      }
+    ]
+  },
+
+  // ── LEVEL 2: Data Types ──
+  {
+    id: 'datatypes',
+    icon: '🎨',
+    title: 'Data Types — Colors of Data',
+    desc: 'Strings, numbers, booleans, and more',
+    xp: 30,
+    challenges: [
+      {
+        type: 'story',
+        emoji: '🎨',
+        title: 'Different Types of Values',
+        body: `Not everything is a number! JavaScript has different <code>types</code> of data:\n\n• <code>"Hello"</code> → String (text)\n• <code>42</code> → Number\n• <code>true</code> / <code>false</code> → Boolean\n• <code>null</code> → Intentionally empty\n• <code>undefined</code> → Not yet assigned`
+      },
+      {
+        type: 'mcq',
+        question: 'What is the type of "Hello World"?',
+        options: ['number', 'boolean', 'string', 'object'],
+        correct: 2,
+        hint: 'Text wrapped in quotes is always a...'
+      },
+      {
+        type: 'mcq',
+        question: 'What does typeof true return?',
+        options: ['"true"', '"boolean"', '"string"', '"number"'],
+        correct: 1,
+        hint: 'true and false are boolean values'
+      },
+      {
+        type: 'fill',
+        question: 'Complete the template literal:',
+        codeBefore: 'let name = "JS";\nlet greeting = ',
+        codeAfter: 'Hello, ${name}!`;',
+        blank: '`',
+        accept: ['`'],
+        hint: 'Template literals use backticks: `'
+      },
+      {
+        type: 'code',
+        question: 'Write a line of code that creates a variable called `age` and sets it to any number.',
+        starter: '',
+        validate: (code) => {
+          try {
+            if (!/\b(let|const|var)\s+age\s*=\s*\d+/.test(code)) return { pass: false, msg: 'Declare a variable named age set to a number, like: let age = 25;' };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'Use let age = <some number>;'
+      }
+    ]
+  },
+
+  // ── LEVEL 3: Strings ──
+  {
+    id: 'strings',
+    icon: '🔤',
+    title: 'String Manipulation — Word Wizardry',
+    desc: 'Slice, dice, and combine text',
+    xp: 40,
+    challenges: [
+      {
+        type: 'story',
+        emoji: '🔤',
+        title: 'Strings Are Powerful!',
+        body: `Strings have built-in superpowers called <code>methods</code>. You can change case, find letters, extract pieces, and more!\n\n<code>"hello".toUpperCase()</code> → <code>"HELLO"</code>\n<code>"hello".length</code> → <code>5</code>\n<code>"hello"[0]</code> → <code>"h"</code>`
+      },
+      {
+        type: 'teach',
+        heading: 'Essential string methods',
+        code: `<span class="keyword">let</span> str = <span class="string">"JavaScript"</span>;\n\nstr.<span class="highlight">length</span>             <span class="comment">// 10</span>\nstr.<span class="highlight">toUpperCase()</span>      <span class="comment">// "JAVASCRIPT"</span>\nstr.<span class="highlight">toLowerCase()</span>      <span class="comment">// "javascript"</span>\nstr.<span class="highlight">slice(0, 4)</span>        <span class="comment">// "Java"</span>\nstr.<span class="highlight">includes("Script")</span> <span class="comment">// true</span>\nstr.<span class="highlight">replace("Java","Type")</span> <span class="comment">// "TypeScript"</span>`
+      },
+      {
+        type: 'mcq',
+        question: 'What does "hello world".toUpperCase() return?',
+        options: ['"Hello World"', '"HELLO WORLD"', '"hello world"', '"Hello world"'],
+        correct: 1,
+        hint: 'toUpperCase() converts ALL letters to uppercase'
+      },
+      {
+        type: 'fill',
+        question: 'Get the first 3 characters of "JavaScript":',
+        codeBefore: '"JavaScript".',
+        codeAfter: '(0, 3)',
+        blank: 'slice',
+        accept: ['slice', 'substring'],
+        hint: 'This method "slices" a portion of the string'
+      },
+      {
+        type: 'code',
+        question: 'Given `let msg = "hello"`, write code that makes `result` equal to "HELLO" using a string method. Declare result with let.',
+        starter: 'let msg = "hello";\n',
+        validate: (code) => {
+          try {
+            const fn = new Function(code + '\nreturn result;');
+            const r = fn();
+            if (r === 'HELLO') return { pass: true };
+            return { pass: false, msg: `Expected "HELLO" but got "${r}"` };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'Use msg.toUpperCase() and store it in result'
+      },
+      {
+        type: 'mcq',
+        question: '"JavaScript".slice(4) returns what?',
+        options: ['"Java"', '"Script"', '"aScrip"', '"Scrip"'],
+        correct: 1,
+        hint: 'slice(4) starts from index 4 to the end'
+      }
+    ]
+  },
+
+  // ── LEVEL 4: Arrays ──
+  {
+    id: 'arrays',
+    icon: '📋',
+    title: 'Arrays — Lists of Power',
+    desc: 'Store and manipulate collections of data',
+    xp: 40,
+    challenges: [
+      {
+        type: 'story',
+        emoji: '📋',
+        title: 'One Variable, Many Values',
+        body: `An <code>array</code> is a list that holds multiple values in a single variable. Think of it like a shelf with numbered slots — starting from <code>0</code>!\n\n<code>let fruits = ["apple", "banana", "cherry"];</code>\n<code>fruits[0]</code> → <code>"apple"</code>\n<code>fruits.length</code> → <code>3</code>`
+      },
+      {
+        type: 'teach',
+        heading: 'Array methods you need',
+        code: `<span class="keyword">let</span> arr = [<span class="string">"a"</span>, <span class="string">"b"</span>, <span class="string">"c"</span>];\n\narr.<span class="highlight">push("d")</span>       <span class="comment">// add to end → ["a","b","c","d"]</span>\narr.<span class="highlight">pop()</span>            <span class="comment">// remove from end → ["a","b","c"]</span>\narr.<span class="highlight">unshift("z")</span>     <span class="comment">// add to start → ["z","a","b","c"]</span>\narr.<span class="highlight">includes("b")</span>    <span class="comment">// true</span>\narr.<span class="highlight">indexOf("b")</span>     <span class="comment">// 1</span>\narr.<span class="highlight">join(" - ")</span>      <span class="comment">// "z - a - b - c"</span>`
+      },
+      {
+        type: 'mcq',
+        question: 'What is the index of "banana" in ["apple", "banana", "cherry"]?',
+        options: ['0', '1', '2', '3'],
+        correct: 1,
+        hint: 'Arrays start counting at 0!'
+      },
+      {
+        type: 'code',
+        question: 'Create an array called `colors` with 3 colors as strings. Then push "gold" to it. The final array should have 4 items.',
+        starter: '',
+        validate: (code) => {
+          try {
+            const fn = new Function(code + '\nreturn colors;');
+            const r = fn();
+            if (!Array.isArray(r)) return { pass: false, msg: 'colors should be an array' };
+            if (r.length !== 4) return { pass: false, msg: `Expected 4 items, got ${r.length}` };
+            if (r[3] !== 'gold') return { pass: false, msg: 'The last item should be "gold"' };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'let colors = ["red","blue","green"]; colors.push("gold");'
+      },
+      {
+        type: 'fill',
+        question: 'Remove the last element from an array:',
+        codeBefore: 'let nums = [1, 2, 3];\nnums.',
+        codeAfter: '();',
+        blank: 'pop',
+        accept: ['pop'],
+        hint: 'This method "pops" off the last item'
+      },
+      {
+        type: 'mcq',
+        question: 'What does [1,2,3].length return?',
+        options: ['2', '3', '4', 'undefined'],
+        correct: 1,
+        hint: 'length tells you how many items are in the array'
+      }
+    ]
+  },
+
+  // ── LEVEL 5: Conditionals ──
+  {
+    id: 'conditionals',
+    icon: '🔀',
+    title: 'Conditionals — Making Decisions',
+    desc: 'if, else if, else — teach your code to think',
+    xp: 40,
+    challenges: [
+      {
+        type: 'story',
+        emoji: '🔀',
+        title: 'Code That Thinks!',
+        body: `With <code>if/else</code>, your code can make decisions — just like you!\n\nIf it's raining → take umbrella\nElse → wear sunglasses\n\nIn JS: <code>if (condition) { ... } else { ... }</code>`
+      },
+      {
+        type: 'teach',
+        heading: 'Conditional syntax',
+        code: `<span class="keyword">let</span> score = <span class="number">85</span>;\n\n<span class="keyword">if</span> (score >= <span class="number">90</span>) {\n  console.log(<span class="string">"A grade! 🌟"</span>);\n} <span class="keyword">else if</span> (score >= <span class="number">70</span>) {\n  console.log(<span class="string">"B grade! 👍"</span>);\n} <span class="keyword">else</span> {\n  console.log(<span class="string">"Keep trying! 💪"</span>);\n}\n<span class="comment">// Output: "B grade! 👍"</span>`
+      },
+      {
+        type: 'mcq',
+        question: 'What is the difference between == and ===?',
+        options: [
+          'No difference',
+          '=== checks type AND value, == only checks value',
+          '== is faster',
+          '=== works only with strings'
+        ],
+        correct: 1,
+        hint: '5 == "5" is true, but 5 === "5" is false'
+      },
+      {
+        type: 'code',
+        question: 'Write a function called `canDrive` that takes an `age` parameter and returns "Yes" if age >= 18, otherwise "No".',
+        starter: 'function canDrive(age) {\n  \n}',
+        validate: (code) => {
+          try {
+            const fn = new Function(code + '\nreturn [canDrive(20), canDrive(16), canDrive(18)];');
+            const [a, b, c] = fn();
+            if (a !== 'Yes') return { pass: false, msg: `canDrive(20) should return "Yes", got "${a}"` };
+            if (b !== 'No') return { pass: false, msg: `canDrive(16) should return "No", got "${b}"` };
+            if (c !== 'Yes') return { pass: false, msg: `canDrive(18) should return "Yes", got "${c}"` };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'Use if (age >= 18) { return "Yes"; } else { return "No"; }'
+      },
+      {
+        type: 'mcq',
+        question: 'What does this output?\n\nlet x = 0;\nif (x) { console.log("truthy"); }\nelse { console.log("falsy"); }',
+        options: ['"truthy"', '"falsy"', 'Error', 'undefined'],
+        correct: 1,
+        hint: '0 is a "falsy" value in JavaScript'
+      }
+    ]
+  },
+
+  // ── LEVEL 6: Loops ──
+  {
+    id: 'loops',
+    icon: '🔁',
+    title: 'Loops — Repeat After Me',
+    desc: 'for, while — automate repetitive tasks',
+    xp: 50,
+    challenges: [
+      {
+        type: 'story',
+        emoji: '🔁',
+        title: 'Why Type It 100 Times?',
+        body: `Imagine printing numbers 1 to 100. You wouldn't write 100 lines of code! <code>Loops</code> repeat code for you.\n\n<code>for</code> loops are perfect when you know how many times to repeat.\n<code>while</code> loops keep going until a condition is false.`
+      },
+      {
+        type: 'teach',
+        heading: 'Loop syntax',
+        code: `<span class="comment">// For loop: init; condition; update</span>\n<span class="keyword">for</span> (<span class="keyword">let</span> i = <span class="number">0</span>; i < <span class="number">5</span>; i++) {\n  console.log(i);  <span class="comment">// 0, 1, 2, 3, 4</span>\n}\n\n<span class="comment">// Loop through an array</span>\n<span class="keyword">let</span> fruits = [<span class="string">"🍎"</span>, <span class="string">"🍌"</span>, <span class="string">"🍒"</span>];\n<span class="keyword">for</span> (<span class="keyword">let</span> fruit <span class="keyword">of</span> fruits) {\n  console.log(fruit);\n}`
+      },
+      {
+        type: 'mcq',
+        question: 'How many times does this loop run?\n\nfor (let i = 0; i < 3; i++) { }',
+        options: ['2 times', '3 times', '4 times', 'Infinite'],
+        correct: 1,
+        hint: 'i starts at 0 and runs while i < 3: so i = 0, 1, 2'
+      },
+      {
+        type: 'reorder',
+        question: 'Put these lines in the correct order to create a loop that sums numbers 1 to 5:',
+        lines: [
+          'let sum = 0;',
+          'for (let i = 1; i <= 5; i++) {',
+          '  sum = sum + i;',
+          '}',
+          'console.log(sum);'
+        ],
+        correctOrder: [0, 1, 2, 3, 4],
+        hint: 'Initialize sum first, then loop, then print'
+      },
+      {
+        type: 'code',
+        question: 'Write a function called `countDown` that takes a number `n` and returns an array like [n, n-1, ... 1]. For example, countDown(3) → [3, 2, 1].',
+        starter: 'function countDown(n) {\n  \n}',
+        validate: (code) => {
+          try {
+            const fn = new Function(code + '\nreturn [JSON.stringify(countDown(3)), JSON.stringify(countDown(5))];');
+            const [a, b] = fn();
+            if (a !== '[3,2,1]') return { pass: false, msg: `countDown(3) should return [3,2,1], got ${a}` };
+            if (b !== '[5,4,3,2,1]') return { pass: false, msg: `countDown(5) should return [5,4,3,2,1], got ${b}` };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'Create an array, use a for loop from n down to 1, push each number'
+      },
+      {
+        type: 'code',
+        question: 'Write a function called `sumArray` that takes an array of numbers and returns their sum. Use a loop!',
+        starter: 'function sumArray(nums) {\n  \n}',
+        validate: (code) => {
+          try {
+            const fn = new Function(code + '\nreturn [sumArray([1,2,3]), sumArray([10,20,30]), sumArray([])];');
+            const [a, b, c] = fn();
+            if (a !== 6) return { pass: false, msg: `sumArray([1,2,3]) should return 6, got ${a}` };
+            if (b !== 60) return { pass: false, msg: `sumArray([10,20,30]) should return 60, got ${b}` };
+            if (c !== 0) return { pass: false, msg: `sumArray([]) should return 0, got ${c}` };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'Start with let total = 0, then loop through nums and add each one'
+      }
+    ]
+  },
+
+  // ── LEVEL 7: Functions ──
+  {
+    id: 'functions',
+    icon: '⚡',
+    title: 'Functions — Reusable Machines',
+    desc: 'Create, call, and compose functions',
+    xp: 50,
+    challenges: [
+      {
+        type: 'story',
+        emoji: '⚡',
+        title: 'Build Your Own Commands!',
+        body: `A <code>function</code> is like a recipe — you define it once, then use it whenever you need.\n\nFunctions can take <code>parameters</code> (inputs) and <code>return</code> a result (output).`
+      },
+      {
+        type: 'teach',
+        heading: 'Function declaration vs arrow function',
+        code: `<span class="comment">// Function declaration</span>\n<span class="keyword">function</span> <span class="highlight">greet</span>(name) {\n  <span class="keyword">return</span> <span class="string">\`Hello, \${name}!\`</span>;\n}\n\n<span class="comment">// Arrow function (modern syntax)</span>\n<span class="keyword">const</span> <span class="highlight">greet2</span> = (name) => <span class="string">\`Hello, \${name}!\`</span>;\n\n<span class="comment">// Both work the same:</span>\ngreet(<span class="string">"Harshad"</span>);  <span class="comment">// "Hello, Harshad!"</span>`
+      },
+      {
+        type: 'mcq',
+        question: 'What does a function do if it has no return statement?',
+        options: ['Returns 0', 'Returns undefined', 'Throws an error', 'Returns null'],
+        correct: 1,
+        hint: 'When nothing is explicitly returned, JS gives you...'
+      },
+      {
+        type: 'code',
+        question: 'Write a function called `double` that takes a number and returns it multiplied by 2.',
+        starter: '',
+        validate: (code) => {
+          try {
+            const fn = new Function(code + '\nreturn [double(5), double(0), double(-3)];');
+            const [a, b, c] = fn();
+            if (a !== 10) return { pass: false, msg: `double(5) should return 10, got ${a}` };
+            if (b !== 0) return { pass: false, msg: `double(0) should return 0, got ${b}` };
+            if (c !== -6) return { pass: false, msg: `double(-3) should return -6, got ${c}` };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'function double(n) { return n * 2; }'
+      },
+      {
+        type: 'code',
+        question: 'Write a function called `isEven` that returns true if a number is even, false otherwise.',
+        starter: '',
+        validate: (code) => {
+          try {
+            const fn = new Function(code + '\nreturn [isEven(4), isEven(7), isEven(0)];');
+            const [a, b, c] = fn();
+            if (a !== true) return { pass: false, msg: `isEven(4) should be true` };
+            if (b !== false) return { pass: false, msg: `isEven(7) should be false` };
+            if (c !== true) return { pass: false, msg: `isEven(0) should be true` };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'Use the modulo operator: n % 2 === 0'
+      },
+      {
+        type: 'code',
+        question: 'Write a function `capitalize` that takes a string and returns it with the first letter uppercase and the rest lowercase. E.g., "hELLO" → "Hello".',
+        starter: '',
+        validate: (code) => {
+          try {
+            const fn = new Function(code + '\nreturn [capitalize("hELLO"), capitalize("world"), capitalize("jS")];');
+            const [a, b, c] = fn();
+            if (a !== 'Hello') return { pass: false, msg: `capitalize("hELLO") should return "Hello", got "${a}"` };
+            if (b !== 'World') return { pass: false, msg: `capitalize("world") should return "World", got "${b}"` };
+            if (c !== 'Js') return { pass: false, msg: `capitalize("jS") should return "Js", got "${c}"` };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'Use str[0].toUpperCase() + str.slice(1).toLowerCase()'
+      }
+    ]
+  },
+
+  // ── LEVEL 8: Objects ──
+  {
+    id: 'objects',
+    icon: '🏠',
+    title: 'Objects — Real World Data',
+    desc: 'Group related data with key-value pairs',
+    xp: 50,
+    challenges: [
+      {
+        type: 'story',
+        emoji: '🏠',
+        title: 'Modeling the Real World',
+        body: `An <code>object</code> groups related data together using <code>key: value</code> pairs.\n\nA person has a name, age, and city — an object holds all of that in one place!\n\n<code>let person = { name: "Harshad", age: 25, city: "Mumbai" };</code>`
+      },
+      {
+        type: 'teach',
+        heading: 'Working with objects',
+        code: `<span class="keyword">let</span> hero = {\n  name: <span class="string">"Link"</span>,\n  hearts: <span class="number">3</span>,\n  items: [<span class="string">"sword"</span>, <span class="string">"shield"</span>]\n};\n\nhero.<span class="highlight">name</span>          <span class="comment">// "Link" (dot notation)</span>\nhero[<span class="string">"hearts"</span>]      <span class="comment">// 3 (bracket notation)</span>\nhero.hearts = <span class="number">5</span>;   <span class="comment">// update a value</span>\nhero.<span class="highlight">level</span> = <span class="number">1</span>;    <span class="comment">// add a new key</span>\nObject.<span class="highlight">keys</span>(hero)  <span class="comment">// ["name","hearts","items","level"]</span>`
+      },
+      {
+        type: 'mcq',
+        question: 'How do you access the `name` property of an object called `user`?',
+        options: ['user[name]', 'user.name', 'user->name', 'user::name'],
+        correct: 1,
+        hint: 'JavaScript uses dot notation for objects'
+      },
+      {
+        type: 'code',
+        question: 'Create a function called `createUser` that takes `name` and `age` parameters and returns an object with those properties.',
+        starter: '',
+        validate: (code) => {
+          try {
+            const fn = new Function(code + '\nlet u = createUser("Alice", 30); return [u.name, u.age];');
+            const [name, age] = fn();
+            if (name !== 'Alice') return { pass: false, msg: `name should be "Alice", got "${name}"` };
+            if (age !== 30) return { pass: false, msg: `age should be 30, got ${age}` };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'return { name: name, age: age }; — or use shorthand { name, age }'
+      },
+      {
+        type: 'code',
+        question: 'Write a function called `getFullName` that takes an object with `first` and `last` properties and returns them joined with a space.',
+        starter: '',
+        validate: (code) => {
+          try {
+            const fn = new Function(code + '\nreturn [getFullName({first:"John",last:"Doe"}), getFullName({first:"Jane",last:"Smith"})];');
+            const [a, b] = fn();
+            if (a !== 'John Doe') return { pass: false, msg: `Expected "John Doe", got "${a}"` };
+            if (b !== 'Jane Smith') return { pass: false, msg: `Expected "Jane Smith", got "${b}"` };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'return person.first + " " + person.last'
+      }
+    ]
+  },
+
+  // ── LEVEL 9: Array Methods ──
+  {
+    id: 'arraymethods',
+    icon: '🧰',
+    title: 'Array Superpowers',
+    desc: 'map, filter, find, reduce — the big four',
+    xp: 60,
+    challenges: [
+      {
+        type: 'story',
+        emoji: '🧰',
+        title: 'Level Up Your Arrays!',
+        body: `Basic loops work, but JavaScript arrays have built-in <code>higher-order methods</code> that are cleaner and more powerful.\n\n• <code>map</code> — transform every item\n• <code>filter</code> — keep items that pass a test\n• <code>find</code> — get the first match\n• <code>reduce</code> — combine everything into one value`
+      },
+      {
+        type: 'teach',
+        heading: 'The Big Four',
+        code: `<span class="keyword">let</span> nums = [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>];\n\nnums.<span class="highlight">map</span>(n => n * <span class="number">2</span>)        <span class="comment">// [2, 4, 6, 8, 10]</span>\nnums.<span class="highlight">filter</span>(n => n > <span class="number">3</span>)     <span class="comment">// [4, 5]</span>\nnums.<span class="highlight">find</span>(n => n > <span class="number">3</span>)       <span class="comment">// 4 (first match)</span>\nnums.<span class="highlight">reduce</span>((sum, n) => sum + n, <span class="number">0</span>)  <span class="comment">// 15</span>`
+      },
+      {
+        type: 'mcq',
+        question: 'What does [1,2,3].map(x => x * 10) return?',
+        options: ['[1,2,3]', '[10,20,30]', '60', '[10]'],
+        correct: 1,
+        hint: 'map transforms each element'
+      },
+      {
+        type: 'code',
+        question: 'Use .filter() to write a function `getEvens` that returns only even numbers from an array.',
+        starter: 'function getEvens(nums) {\n  \n}',
+        validate: (code) => {
+          try {
+            const fn = new Function(code + '\nreturn JSON.stringify(getEvens([1,2,3,4,5,6]));');
+            const r = fn();
+            if (r !== '[2,4,6]') return { pass: false, msg: `Expected [2,4,6], got ${r}` };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'return nums.filter(n => n % 2 === 0);'
+      },
+      {
+        type: 'code',
+        question: 'Use .map() to write a function `shout` that takes an array of strings and returns them all in UPPERCASE.',
+        starter: 'function shout(words) {\n  \n}',
+        validate: (code) => {
+          try {
+            const fn = new Function(code + '\nreturn JSON.stringify(shout(["hello","world"]));');
+            const r = fn();
+            if (r !== '["HELLO","WORLD"]') return { pass: false, msg: `Expected ["HELLO","WORLD"], got ${r}` };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'return words.map(w => w.toUpperCase());'
+      },
+      {
+        type: 'code',
+        question: 'Use .reduce() to write a function `product` that multiplies all numbers in an array together. product([2,3,4]) → 24.',
+        starter: 'function product(nums) {\n  \n}',
+        validate: (code) => {
+          try {
+            const fn = new Function(code + '\nreturn [product([2,3,4]), product([1,5,10])];');
+            const [a, b] = fn();
+            if (a !== 24) return { pass: false, msg: `product([2,3,4]) should be 24, got ${a}` };
+            if (b !== 50) return { pass: false, msg: `product([1,5,10]) should be 50, got ${b}` };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'return nums.reduce((acc, n) => acc * n, 1);'
+      }
+    ]
+  },
+
+  // ── LEVEL 10: Boss Level ──
+  {
+    id: 'boss',
+    icon: '🏆',
+    title: 'Boss Level — The Final Challenge',
+    desc: 'Combine everything you learned!',
+    xp: 80,
+    challenges: [
+      {
+        type: 'story',
+        emoji: '🏆',
+        title: 'The Final Boss!',
+        body: `You've learned variables, types, strings, arrays, loops, functions, objects, and array methods. Now it's time to combine them all!\n\nEach challenge below tests multiple concepts. Good luck, coder! 🎯`
+      },
+      {
+        type: 'code',
+        question: 'Write a function `fizzBuzz` that takes a number n and returns an array from 1 to n where: multiples of 3 are "Fizz", multiples of 5 are "Buzz", multiples of both are "FizzBuzz", others stay as numbers.',
+        starter: 'function fizzBuzz(n) {\n  \n}',
+        validate: (code) => {
+          try {
+            const fn = new Function(code + '\nreturn JSON.stringify(fizzBuzz(15));');
+            const r = fn();
+            const expected = JSON.stringify([1,2,"Fizz",4,"Buzz","Fizz",7,8,"Fizz","Buzz",11,"Fizz",13,14,"FizzBuzz"]);
+            if (r !== expected) return { pass: false, msg: `Expected ${expected}\nGot ${r}` };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'Loop 1 to n. Check divisible by 15 first (FizzBuzz), then 3 (Fizz), then 5 (Buzz), else the number.'
+      },
+      {
+        type: 'code',
+        question: 'Write a function `wordCount` that takes a sentence string and returns an object where keys are words (lowercase) and values are how many times each word appears.\n\nwordCount("the cat and the dog") → {the:2, cat:1, and:1, dog:1}',
+        starter: 'function wordCount(sentence) {\n  \n}',
+        validate: (code) => {
+          try {
+            const fn = new Function(code + '\nreturn JSON.stringify(wordCount("the cat and the dog"));');
+            const r = JSON.parse(fn());
+            if (r.the !== 2 || r.cat !== 1 || r.and !== 1 || r.dog !== 1) {
+              return { pass: false, msg: `Expected {the:2,cat:1,and:1,dog:1}, got ${JSON.stringify(r)}` };
+            }
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'Split the sentence into words, loop through them, build an object counting each word.'
+      },
+      {
+        type: 'code',
+        question: 'Write a function `findLongest` that takes an array of strings and returns the longest string. If there\'s a tie, return the first one.',
+        starter: 'function findLongest(arr) {\n  \n}',
+        validate: (code) => {
+          try {
+            const fn = new Function(code + '\nreturn [findLongest(["hi","hello","hey"]), findLongest(["a","bb","cc"])];');
+            const [a, b] = fn();
+            if (a !== 'hello') return { pass: false, msg: `Expected "hello", got "${a}"` };
+            if (b !== 'bb') return { pass: false, msg: `Expected "bb" (first longest), got "${b}"` };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'You could use reduce: compare each string\'s length and keep the longer one.'
+      },
+      {
+        type: 'code',
+        question: 'Write a function `isPalindrome` that checks if a string reads the same forwards and backwards (ignore case). Return true or false.\n\nisPalindrome("Racecar") → true',
+        starter: 'function isPalindrome(str) {\n  \n}',
+        validate: (code) => {
+          try {
+            const fn = new Function(code + '\nreturn [isPalindrome("Racecar"), isPalindrome("hello"), isPalindrome("Level")];');
+            const [a, b, c] = fn();
+            if (a !== true) return { pass: false, msg: `isPalindrome("Racecar") should be true` };
+            if (b !== false) return { pass: false, msg: `isPalindrome("hello") should be false` };
+            if (c !== true) return { pass: false, msg: `isPalindrome("Level") should be true` };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'Convert to lowercase, then reverse the string and compare. To reverse: str.split("").reverse().join("")'
+      }
+    ]
+  }
+];
+
+// ═══════════════════════════════════════════
+//  RENDERING ENGINE
+// ═══════════════════════════════════════════
+
+let currentLevel = null;
+let currentChallenge = 0;
+let challengeResults = [];
+
+function showMap() {
+  document.getElementById('worldMap').style.display = 'block';
+  document.getElementById('challengeView').classList.remove('active');
+  renderMap();
+  updateTopBar();
+}
+
+function renderMap() {
+  const path = document.getElementById('levelPath');
+  path.innerHTML = '';
+
+  LEVELS.forEach((level, i) => {
+    const isCompleted = state.completedLevels[level.id];
+    const isLocked = i > 0 && !state.completedLevels[LEVELS[i-1].id];
+    const isCurrent = !isCompleted && !isLocked;
+    const stars = state.levelStars[level.id] || 0;
+
+    if (i > 0) {
+      const conn = document.createElement('div');
+      conn.className = 'connector' + (state.completedLevels[LEVELS[i-1].id] ? ' completed' : '');
+      path.appendChild(conn);
+    }
+
+    const node = document.createElement('div');
+    node.className = `level-node ${isCompleted ? 'completed' : ''} ${isLocked ? 'locked' : ''} ${isCurrent ? 'current' : ''}`;
+    node.innerHTML = `
+      <div class="level-icon">${level.icon}</div>
+      <div class="level-info">
+        <h3>${level.title}</h3>
+        <p>${level.desc}</p>
+      </div>
+      ${isCompleted ? `<div class="level-stars">${'⭐'.repeat(stars)}</div>` : ''}
+    `;
+    if (!isLocked) {
+      node.onclick = () => startLevel(i);
+    }
+    path.appendChild(node);
+  });
+}
+
+function startLevel(index) {
+  currentLevel = index;
+  currentChallenge = 0;
+  challengeResults = [];
+  document.getElementById('worldMap').style.display = 'none';
+  document.getElementById('challengeView').classList.add('active');
+  renderChallenge();
+}
+
+function renderChallenge() {
+  const level = LEVELS[currentLevel];
+  const challenge = level.challenges[currentChallenge];
+  const content = document.getElementById('challengeContent');
+
+  // Progress dots
+  const dots = document.getElementById('progressDots');
+  dots.innerHTML = level.challenges.map((_, i) => {
+    let cls = 'progress-dot';
+    if (i < currentChallenge) cls += ' done';
+    if (i === currentChallenge) cls += ' active';
+    return `<div class="${cls}"></div>`;
+  }).join('');
+
+  // Render by type
+  switch(challenge.type) {
+    case 'story': renderStory(challenge, content); break;
+    case 'teach': renderTeach(challenge, content); break;
+    case 'mcq': renderMCQ(challenge, content); break;
+    case 'fill': renderFill(challenge, content); break;
+    case 'code': renderCode(challenge, content); break;
+    case 'reorder': renderReorder(challenge, content); break;
+  }
+}
+
+function renderStory(ch, el) {
+  el.innerHTML = `
+    <div class="story-card">
+      <span class="emoji">${ch.emoji}</span>
+      <h2>${ch.title}</h2>
+      <p>${ch.body.replace(/\n/g, '<br>')}</p>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="nextChallenge()">Got it! Let's go →</button>
+    </div>
+  `;
+}
+
+function renderTeach(ch, el) {
+  el.innerHTML = `
+    <div class="teach-block">
+      <h3>${ch.heading}</h3>
+      <pre>${ch.code}</pre>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="nextChallenge()">I understand →</button>
+    </div>
+  `;
+}
+
+function renderMCQ(ch, el) {
+  const qText = ch.question.replace(/\n/g, '<br>');
+  el.innerHTML = `
+    <div class="challenge-card">
+      <h3>Choose the correct answer</h3>
+      <p style="font-family: 'JetBrains Mono', monospace; white-space: pre-wrap;">${qText}</p>
+      <div class="mcq-options" id="mcqOptions">
+        ${ch.options.map((opt, i) => `<div class="mcq-option" data-idx="${i}" onclick="selectMCQ(${i})">${opt}</div>`).join('')}
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="mcqSubmit" disabled onclick="submitMCQ()">Check Answer</button>
+      </div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+  `;
+}
+
+let selectedMCQ = -1;
+
+function selectMCQ(idx) {
+  selectedMCQ = idx;
+  document.querySelectorAll('.mcq-option').forEach((opt, i) => {
+    opt.classList.toggle('selected', i === idx);
+  });
+  document.getElementById('mcqSubmit').disabled = false;
+}
+
+function submitMCQ() {
+  const ch = LEVELS[currentLevel].challenges[currentChallenge];
+  const opts = document.querySelectorAll('.mcq-option');
+  const feedback = document.getElementById('feedback');
+
+  opts.forEach((opt, i) => {
+    opt.onclick = null;
+    if (i === ch.correct) opt.classList.add('correct');
+    if (i === selectedMCQ && i !== ch.correct) opt.classList.add('wrong');
+  });
+
+  if (selectedMCQ === ch.correct) {
+    feedback.className = 'feedback show success';
+    feedback.innerHTML = '✓ Correct! Nice work!';
+    challengeResults.push(true);
+    document.getElementById('mcqSubmit').textContent = 'Next →';
+    document.getElementById('mcqSubmit').onclick = nextChallenge;
+  } else {
+    feedback.className = 'feedback show error';
+    feedback.innerHTML = `✗ Not quite!<div class="hint">Hint: ${ch.hint}</div>`;
+    challengeResults.push(false);
+    document.getElementById('mcqSubmit').textContent = 'Next →';
+    document.getElementById('mcqSubmit').onclick = nextChallenge;
+  }
+  document.getElementById('mcqSubmit').disabled = false;
+}
+
+function renderFill(ch, el) {
+  el.innerHTML = `
+    <div class="challenge-card">
+      <h3>Fill in the blank</h3>
+      <p>${ch.question}</p>
+      <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; background: var(--code-bg); padding: 16px; border-radius: 10px; line-height: 2;">
+        ${ch.codeBefore}<input type="text" class="fill-blank-input" id="fillInput" autocomplete="off" spellcheck="false">${ch.codeAfter}
+      </div>
+      <div class="btn-row" style="margin-top: 16px;">
+        <button class="btn btn-primary" onclick="submitFill()">Check Answer</button>
+      </div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+  `;
+  document.getElementById('fillInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitFill();
+  });
+}
+
+function submitFill() {
+  const ch = LEVELS[currentLevel].challenges[currentChallenge];
+  const input = document.getElementById('fillInput');
+  const val = input.value.trim();
+  const feedback = document.getElementById('feedback');
+
+  if (ch.accept.includes(val)) {
+    input.classList.add('correct');
+    feedback.className = 'feedback show success';
+    feedback.innerHTML = '✓ Perfect!';
+    challengeResults.push(true);
+    setTimeout(nextChallenge, 800);
+  } else {
+    input.classList.add('wrong');
+    feedback.className = 'feedback show error';
+    feedback.innerHTML = `✗ Try again! <div class="hint">Hint: ${ch.hint}</div>`;
+    challengeResults.push(false);
+    setTimeout(() => { input.classList.remove('wrong'); }, 400);
+    // Allow retry — replace button
+    const btn = document.querySelector('.btn-primary');
+    btn.textContent = 'Try Again';
+    btn.onclick = () => {
+      input.classList.remove('wrong');
+      feedback.className = 'feedback';
+    };
+    // Also add skip
+    if (!document.getElementById('skipBtn')) {
+      const skip = document.createElement('button');
+      skip.id = 'skipBtn';
+      skip.className = 'btn btn-secondary';
+      skip.textContent = 'Skip →';
+      skip.onclick = nextChallenge;
+      btn.parentNode.appendChild(skip);
+    }
+  }
+}
+
+function renderCode(ch, el) {
+  el.innerHTML = `
+    <div class="challenge-card">
+      <h3>Write Code</h3>
+      <p>${ch.question.replace(/\n/g, '<br>')}</p>
+      <div class="code-editor-wrap">
+        <textarea class="code-editor" id="codeInput" spellcheck="false">${ch.starter}</textarea>
+      </div>
+      <div class="output-console" id="codeOutput">Output will appear here...</div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="runCode()">▶ Run & Check</button>
+        <button class="btn btn-secondary" onclick="showHint()">💡 Hint</button>
+      </div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+  `;
+
+  // Tab support in textarea
+  document.getElementById('codeInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const ta = e.target;
+      const start = ta.selectionStart;
+      ta.value = ta.value.substring(0, start) + '  ' + ta.value.substring(ta.selectionEnd);
+      ta.selectionStart = ta.selectionEnd = start + 2;
+    }
+  });
+}
+
+function runCode() {
+  const ch = LEVELS[currentLevel].challenges[currentChallenge];
+  const code = document.getElementById('codeInput').value;
+  const output = document.getElementById('codeOutput');
+  const feedback = document.getElementById('feedback');
+  const editor = document.getElementById('codeInput');
+
+  // Capture console.log
+  let logs = [];
+  const origLog = console.log;
+  console.log = (...args) => logs.push(args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a)).join(' '));
+
+  try {
+    const result = ch.validate(code);
+    console.log = origLog;
+
+    output.innerHTML = logs.length > 0
+      ? logs.map(l => `<div class="log">&gt; ${l}</div>`).join('')
+      : '<span style="color: var(--text-dim);">No output</span>';
+
+    if (result.pass) {
+      editor.classList.add('correct');
+      feedback.className = 'feedback show success';
+      feedback.innerHTML = '✓ All tests passed! Brilliant!';
+      challengeResults.push(true);
+      setTimeout(nextChallenge, 1200);
+    } else {
+      editor.classList.remove('correct');
+      editor.classList.add('wrong');
+      setTimeout(() => editor.classList.remove('wrong'), 400);
+      feedback.className = 'feedback show error';
+      feedback.innerHTML = `✗ ${result.msg}`;
+      challengeResults.push(false);
+    }
+  } catch(e) {
+    console.log = origLog;
+    output.innerHTML = `<div class="error">Error: ${e.message}</div>`;
+    feedback.className = 'feedback show error';
+    feedback.innerHTML = `✗ Code error — check your syntax`;
+  }
+}
+
+function showHint() {
+  const ch = LEVELS[currentLevel].challenges[currentChallenge];
+  const feedback = document.getElementById('feedback');
+  feedback.className = 'feedback show';
+  feedback.style.background = 'rgba(245,158,11,0.1)';
+  feedback.style.border = '1px solid var(--orange)';
+  feedback.style.color = 'var(--orange)';
+  feedback.innerHTML = `💡 ${ch.hint}`;
+}
+
+function renderReorder(ch, el) {
+  const shuffled = ch.lines.map((line, i) => ({ line, origIdx: i }));
+  // Shuffle
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+
+  el.innerHTML = `
+    <div class="challenge-card">
+      <h3>Reorder the Code</h3>
+      <p>${ch.question}</p>
+      <div class="reorder-container" id="reorderContainer">
+        ${shuffled.map((item, i) => `
+          <div class="reorder-item" draggable="true" data-orig="${item.origIdx}" data-pos="${i}">
+            <span class="line-num">${i + 1}.</span> ${item.line}
+          </div>
+        `).join('')}
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="checkReorder()">Check Order</button>
+      </div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+  `;
+
+  // Drag and drop
+  const container = document.getElementById('reorderContainer');
+  let draggedEl = null;
+
+  container.querySelectorAll('.reorder-item').forEach(item => {
+    item.addEventListener('dragstart', (e) => {
+      draggedEl = item;
+      item.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    item.addEventListener('dragend', () => {
+      item.classList.remove('dragging');
+      container.querySelectorAll('.reorder-item').forEach(i => i.classList.remove('over'));
+    });
+    item.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      item.classList.add('over');
+    });
+    item.addEventListener('dragleave', () => item.classList.remove('over'));
+    item.addEventListener('drop', (e) => {
+      e.preventDefault();
+      item.classList.remove('over');
+      if (draggedEl !== item) {
+        const allItems = [...container.querySelectorAll('.reorder-item')];
+        const fromIdx = allItems.indexOf(draggedEl);
+        const toIdx = allItems.indexOf(item);
+        if (fromIdx < toIdx) {
+          container.insertBefore(draggedEl, item.nextSibling);
+        } else {
+          container.insertBefore(draggedEl, item);
+        }
+        // Update line numbers
+        container.querySelectorAll('.reorder-item').forEach((el, i) => {
+          el.querySelector('.line-num').textContent = `${i + 1}.`;
+        });
+      }
+    });
+  });
+}
+
+function checkReorder() {
+  const ch = LEVELS[currentLevel].challenges[currentChallenge];
+  const items = document.querySelectorAll('.reorder-item');
+  const currentOrder = [...items].map(el => parseInt(el.dataset.orig));
+  const feedback = document.getElementById('feedback');
+
+  if (JSON.stringify(currentOrder) === JSON.stringify(ch.correctOrder)) {
+    feedback.className = 'feedback show success';
+    feedback.innerHTML = '✓ Perfect order! The code makes sense!';
+    challengeResults.push(true);
+    setTimeout(nextChallenge, 1000);
+  } else {
+    feedback.className = 'feedback show error';
+    feedback.innerHTML = `✗ Not quite right. <div class="hint">Hint: ${ch.hint}</div>`;
+    challengeResults.push(false);
+  }
+}
+
+function nextChallenge() {
+  const level = LEVELS[currentLevel];
+  currentChallenge++;
+
+  if (currentChallenge >= level.challenges.length) {
+    completeLevel();
+  } else {
+    renderChallenge();
+  }
+}
+
+function completeLevel() {
+  const level = LEVELS[currentLevel];
+
+  // Calculate stars based on success rate on actual challenges (not story/teach)
+  const gradedResults = challengeResults; // all results for interactive challenges
+  const correctCount = gradedResults.filter(Boolean).length;
+  const totalGraded = gradedResults.length || 1;
+  const ratio = correctCount / totalGraded;
+
+  let stars = 1;
+  if (ratio >= 0.9) stars = 3;
+  else if (ratio >= 0.6) stars = 2;
+
+  // Update state
+  state.completedLevels[level.id] = true;
+  const prevStars = state.levelStars[level.id] || 0;
+  if (stars > prevStars) state.levelStars[level.id] = stars;
+
+  addXP(level.xp);
+  saveState();
+
+  const emojis = ['🎉', '🚀', '🏆'];
+  const titles = ['Level Complete!', 'Awesome Work!', 'You Crushed It!'];
+  const descs = [
+    `You finished "${level.title}" and earned ${stars} star${stars > 1 ? 's' : ''}!`,
+    `${correctCount} out of ${totalGraded} challenges on the first try!`,
+    'Keep going — the next challenge awaits!'
+  ];
+
+  showCelebration(
+    emojis[stars - 1],
+    titles[stars - 1],
+    descs[Math.min(stars - 1, descs.length - 1)],
+    level.xp
+  );
+}
+
+// ── Init ──
+showMap();
+updateTopBar();
+</script>
+</body>
+</html>
