@@ -424,7 +424,7 @@ const LEVELS = [
       {
         type: 'livecode',
         title: 'Build a Dashboard!',
-        description: 'The page has this HTML. Write JS to make the speed show "200 km/h" in red, and the fuel show "50%" in orange.',
+        description: 'The preview has two elements: <code>&lt;p id="speed"&gt;</code> and <code>&lt;p id="fuel"&gt;</code>. Write JS to make speed show "200 km/h" in red, and fuel show "50%" in orange.',
         setupHTML: '<div style="font-family:sans-serif;padding:20px;background:#111;color:white;border-radius:12px;">\n  <h2>Dashboard</h2>\n  <p id="speed" style="font-size:24px;">0 km/h</p>\n  <p id="fuel">Fuel: 100%</p>\n</div>',
         starterJS: '// Select the speed element and change it\n\n\n// Select the fuel element and change it\n',
         validate: (doc) => {
@@ -1058,7 +1058,7 @@ function renderBugfix(ch, el) {
       <span class="bug-indicator">🐛 BUG DETECTED</span>
       <p>${ch.description}</p>
       <textarea class="bugfix-editor" id="bugI" spellcheck="false">${ch.buggyCode}</textarea>
-      ${ch.setupHTML ? `<div style="margin:10px 0;padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:0.75rem;color:var(--text-dim);">Preview HTML: <code>${ch.setupHTML.replace(/</g,'&lt;')}</code></div>` : ''}
+      ${ch.setupHTML ? `<div style="margin:10px 0;"><div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);font-weight:700;margin-bottom:6px;">HTML on the page</div><div style="background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--text-dim);white-space:pre-wrap;">${ch.setupHTML.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div></div>` : ''}
       <div class="console" id="bugOut">Fix the code and run to test...</div>
       <div class="btn-row" style="margin-top:10px;">
         <button class="btn btn-p" onclick="runBugfix()">▶ Run Fixed Code</button>
@@ -1108,6 +1108,10 @@ function renderLiveCode(ch, el) {
     <div class="ch-card">
       <h3>${ch.title}</h3>
       <p>${ch.description}</p>
+      <div style="margin-bottom:10px;">
+        <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-dim);font-weight:700;margin-bottom:6px;">HTML on the page</div>
+        <div style="background:var(--code-bg);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:0.78rem;color:var(--text-dim);white-space:pre-wrap;overflow-x:auto;">${ch.setupHTML.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+      </div>
       <div class="playground">
         <div class="pg-editor"><span class="pg-editor-label">Your JS</span><textarea id="lcJS" spellcheck="false">${ch.starterJS}</textarea></div>
         <div class="pg-preview" id="lcPreview"><span class="pg-preview-label">Live Preview</span></div>
