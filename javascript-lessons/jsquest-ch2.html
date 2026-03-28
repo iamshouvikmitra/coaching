@@ -1,0 +1,1967 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JS Quest Ch.2 — Speed Racer</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700;900&family=Orbitron:wght@700;900&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a12;
+      --surface: #141422;
+      --surface2: #1c1c30;
+      --accent: #e63946;
+      --accent-glow: #ff6b6b;
+      --green: #10b981;
+      --green-glow: #34d399;
+      --blue: #3b82f6;
+      --orange: #f59e0b;
+      --purple: #8b5cf6;
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+      --code-bg: #0d1117;
+      --border: #2a2a40;
+      --road: #2d2d3d;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Top Bar ── */
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 24px; background: var(--surface);
+      border-bottom: 2px solid var(--accent); position: sticky; top: 0; z-index: 100;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 16px; }
+    .logo {
+      font-family: 'Orbitron', sans-serif; font-weight: 900; font-size: 1.2rem;
+      color: var(--accent);
+    }
+    .logo span { color: var(--text); }
+    .xp-pill {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--surface2); padding: 5px 14px; border-radius: 20px;
+    }
+    .xp-pill .val { font-family: 'Orbitron', sans-serif; font-size: 0.8rem; color: var(--orange); }
+    .xp-bar-track { width: 100px; height: 6px; background: #1a1a2e; border-radius: 3px; }
+    .xp-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--orange), #fbbf24); transition: width 0.5s; }
+    .topbar-right { display: flex; gap: 8px; }
+    .btn-sm {
+      padding: 5px 12px; border-radius: 6px; border: 1px solid var(--border);
+      background: var(--surface2); color: var(--text-dim); cursor: pointer;
+      font-size: 0.75rem; font-weight: 600; transition: all 0.2s;
+    }
+    .btn-sm:hover { border-color: var(--accent); color: var(--text); }
+
+    /* ── Views ── */
+    .view { display: none; max-width: 920px; margin: 0 auto; padding: 24px 20px; }
+    .view.active { display: block; }
+
+    /* ── Map ── */
+    .map-header { text-align: center; margin-bottom: 32px; }
+    .map-header h1 {
+      font-family: 'Orbitron', sans-serif; font-size: 2rem;
+      background: linear-gradient(135deg, var(--accent), var(--orange));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .map-header p { color: var(--text-dim); margin-top: 6px; }
+    .level-list { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+    .lnode {
+      width: 320px; padding: 16px 20px; background: var(--surface);
+      border: 2px solid var(--border); border-radius: 14px;
+      cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 14px;
+      position: relative;
+    }
+    .lnode:hover { transform: translateY(-2px); border-color: var(--accent); }
+    .lnode.done { border-color: var(--green); }
+    .lnode.done .licon { background: var(--green); }
+    .lnode.locked { opacity: 0.35; cursor: not-allowed; }
+    .lnode.locked:hover { transform: none; border-color: var(--border); }
+    .lnode.cur { border-color: var(--accent); box-shadow: 0 0 24px rgba(230,57,70,0.25); }
+    .licon {
+      width: 44px; height: 44px; border-radius: 12px; background: var(--accent);
+      display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0;
+    }
+    .linfo h3 { font-size: 0.9rem; margin-bottom: 2px; }
+    .linfo p { font-size: 0.72rem; color: var(--text-dim); }
+    .lstars { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); }
+    .pipe { width: 2px; height: 16px; background: var(--border); }
+    .pipe.done { background: var(--green); }
+
+    /* ── Challenge ── */
+    .ch-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .back-btn { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 0.9rem; font-weight: 600; }
+    .back-btn:hover { color: var(--text); }
+    .dots { display: flex; gap: 5px; }
+    .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border); }
+    .dot.ok { background: var(--green); border-color: var(--green); }
+    .dot.on { background: var(--accent); border-color: var(--accent); }
+
+    /* ── Cards ── */
+    .story-card {
+      background: linear-gradient(135deg, var(--surface), var(--surface2));
+      border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 20px;
+    }
+    .story-card .emo { font-size: 2.2rem; display: block; margin-bottom: 8px; }
+    .story-card h2 { font-size: 1.2rem; margin-bottom: 8px; }
+    .story-card p { color: var(--text-dim); line-height: 1.65; }
+    .story-card code {
+      background: var(--code-bg); padding: 2px 6px; border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.83em; color: var(--accent-glow);
+    }
+
+    .teach-block {
+      background: var(--code-bg); border: 1px solid var(--border);
+      border-radius: 12px; padding: 18px; margin-bottom: 20px;
+    }
+    .teach-block h3 {
+      color: var(--green-glow); font-size: 0.8rem; text-transform: uppercase;
+      letter-spacing: 1px; margin-bottom: 10px;
+    }
+    .teach-block pre {
+      font-family: 'JetBrains Mono', monospace; font-size: 0.82rem;
+      line-height: 1.7; color: var(--text); overflow-x: auto;
+    }
+    .hl { color: #a78bfa; } .cm { color: #6b7280; } .st { color: #34d399; }
+    .kw { color: #f472b6; } .nm { color: #f59e0b; }
+
+    .ch-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 22px; margin-bottom: 14px;
+    }
+    .ch-card h3 { margin-bottom: 10px; font-size: 1.05rem; }
+    .ch-card p { color: var(--text-dim); margin-bottom: 14px; line-height: 1.5; }
+
+    .code-editor {
+      width: 100%; min-height: 110px; padding: 14px;
+      background: var(--code-bg); border: 2px solid var(--border);
+      border-radius: 10px; color: var(--text);
+      font-family: 'JetBrains Mono', monospace; font-size: 0.82rem;
+      line-height: 1.6; resize: vertical; outline: none; transition: border-color 0.3s;
+    }
+    .code-editor:focus { border-color: var(--accent); }
+    .code-editor.ok { border-color: var(--green) !important; }
+    .code-editor.bad { border-color: #ef4444 !important; animation: shake 0.35s; }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+
+    .mcq-opts { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .mcq-opt {
+      padding: 12px 16px; background: var(--surface2); border: 2px solid var(--border);
+      border-radius: 10px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .mcq-opt:hover { border-color: var(--accent); }
+    .mcq-opt.sel { border-color: var(--accent); background: rgba(230,57,70,0.12); }
+    .mcq-opt.ok { border-color: var(--green); background: rgba(16,185,129,0.12); }
+    .mcq-opt.bad { border-color: #ef4444; background: rgba(239,68,68,0.08); }
+
+    .fill-inp {
+      display: inline-block; width: 130px; padding: 4px 8px;
+      background: var(--code-bg); border: 2px solid var(--border);
+      border-radius: 6px; color: var(--accent-glow);
+      font-family: 'JetBrains Mono', monospace; font-size: 0.83rem;
+      text-align: center; outline: none;
+    }
+    .fill-inp:focus { border-color: var(--accent); }
+
+    .console {
+      background: #000; border-radius: 8px; padding: 12px;
+      font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+      color: var(--green-glow); margin-bottom: 14px; min-height: 36px; border: 1px solid #222;
+    }
+
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn {
+      padding: 9px 22px; border-radius: 9px; border: none;
+      font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-p { background: linear-gradient(135deg, var(--accent), #c1121f); color: #fff; }
+    .btn-p:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(230,57,70,0.4); }
+    .btn-s { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+    .btn-s:hover { border-color: var(--accent); }
+    .btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none !important; }
+
+    .fb { padding: 12px 16px; border-radius: 10px; margin-top: 14px; font-weight: 600; display: none; }
+    .fb.show { display: block; animation: fadeUp 0.3s; }
+    .fb.win { background: rgba(16,185,129,0.12); border: 1px solid var(--green); color: var(--green-glow); }
+    .fb.lose { background: rgba(239,68,68,0.08); border: 1px solid #ef4444; color: #fca5a5; }
+    .fb .hint { font-weight: 400; color: var(--text-dim); margin-top: 5px; font-size: 0.82rem; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ── Celebration ── */
+    .cel-ov {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.75);
+      display: none; align-items: center; justify-content: center; z-index: 200;
+    }
+    .cel-ov.show { display: flex; }
+    .cel-box {
+      background: var(--surface); border: 2px solid var(--green);
+      border-radius: 20px; padding: 36px; text-align: center; max-width: 420px;
+      animation: popIn 0.35s;
+    }
+    @keyframes popIn { from { transform: scale(0.85); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .cel-box .big { font-size: 3.5rem; display: block; margin-bottom: 12px; }
+    .cel-box h2 { font-size: 1.4rem; margin-bottom: 6px; color: var(--green-glow); }
+    .cel-box p { color: var(--text-dim); margin-bottom: 16px; }
+    .cel-box .xpe { font-size: 1.1rem; color: var(--orange); font-weight: 700; margin-bottom: 14px; }
+    .cel-box .reward-label {
+      display: inline-block; background: var(--surface2); border: 1px solid var(--accent);
+      border-radius: 8px; padding: 6px 16px; font-size: 0.85rem; color: var(--accent-glow);
+      margin-bottom: 14px;
+    }
+
+    .particle {
+      position: fixed; pointer-events: none; z-index: 300;
+      animation: pfall 1.4s ease-out forwards;
+    }
+    @keyframes pfall {
+      0% { opacity: 1; transform: translateY(0) rotate(0) scale(1); }
+      100% { opacity: 0; transform: translateY(280px) rotate(700deg) scale(0); }
+    }
+
+    /* ═══ MINI GAME STYLES ═══ */
+    .game-container {
+      background: var(--surface); border: 2px solid var(--accent);
+      border-radius: 16px; overflow: hidden; margin-bottom: 20px;
+    }
+    .game-titlebar {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 16px; background: var(--surface2); border-bottom: 1px solid var(--border);
+    }
+    .game-titlebar h3 { font-family: 'Orbitron', sans-serif; font-size: 0.85rem; color: var(--accent); }
+    .game-titlebar .game-stats { display: flex; gap: 14px; font-size: 0.8rem; color: var(--text-dim); }
+    .game-titlebar .game-stats span { font-family: 'Orbitron', sans-serif; color: var(--orange); }
+
+    canvas#gameCanvas {
+      display: block; width: 100%; background: var(--road);
+    }
+
+    .game-controls-info {
+      padding: 10px 16px; background: var(--surface2);
+      border-top: 1px solid var(--border); font-size: 0.75rem; color: var(--text-dim);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .game-controls-info kbd {
+      background: var(--code-bg); padding: 2px 8px; border-radius: 4px;
+      border: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+    }
+
+    /* ── Dashboard (Level 1 reward) ── */
+    .dashboard {
+      background: linear-gradient(180deg, #111120, #0a0a14);
+      border: 2px solid var(--border); border-radius: 16px;
+      padding: 24px; margin-bottom: 20px;
+    }
+    .dash-row { display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; }
+    .gauge {
+      width: 140px; text-align: center;
+    }
+    .gauge canvas { display: block; margin: 0 auto 8px; }
+    .gauge-label { font-family: 'Orbitron', sans-serif; font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; }
+    .gauge-value { font-family: 'Orbitron', sans-serif; font-size: 1.4rem; color: var(--accent); }
+
+    @media (max-width: 600px) {
+      .topbar { flex-wrap: wrap; gap: 6px; }
+      .lnode { width: 100%; }
+      .view { padding: 14px 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Top Bar ── -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="logo">SPEED <span>RACER</span></div>
+    <div class="xp-pill">
+      <span class="val" id="xpLabel">0 XP</span>
+      <div class="xp-bar-track"><div class="xp-bar-fill" id="xpBar" style="width:0%"></div></div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <a href="jsquest.html" class="btn-sm" style="text-decoration:none;">Ch.1</a>
+    <button class="btn-sm" onclick="resetAll()">Reset</button>
+  </div>
+</div>
+
+<!-- ── Map View ── -->
+<div class="view active" id="mapView">
+  <div class="map-header">
+    <h1>Chapter 2: Speed Racer</h1>
+    <p>Learn intermediate JS by building a racing game — piece by piece</p>
+  </div>
+  <div class="level-list" id="levelList"></div>
+</div>
+
+<!-- ── Challenge View ── -->
+<div class="view" id="chView">
+  <div class="ch-head">
+    <button class="back-btn" onclick="goMap()">&#8592; Back to Map</button>
+    <div class="dots" id="dots"></div>
+  </div>
+  <div id="chContent"></div>
+</div>
+
+<!-- ── Game View (Reward) ── -->
+<div class="view" id="gameView">
+  <div class="ch-head">
+    <button class="back-btn" onclick="goMap()">&#8592; Back to Map</button>
+    <div style="font-family:'Orbitron',sans-serif;font-size:0.85rem;color:var(--accent);">REWARD UNLOCKED</div>
+  </div>
+  <div id="gameContent"></div>
+</div>
+
+<!-- ── Celebration ── -->
+<div class="cel-ov" id="cel">
+  <div class="cel-box">
+    <span class="big" id="celE"></span>
+    <h2 id="celT"></h2>
+    <p id="celD"></p>
+    <div class="xpe" id="celXP"></div>
+    <div class="reward-label" id="celR"></div><br><br>
+    <button class="btn btn-p" id="celBtn">Play Reward!</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  SOUND ENGINE — Web Audio API
+// ═══════════════════════════════════════════
+
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+function getAudio() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+  return audioCtx;
+}
+
+const SFX = {
+  engine(speed = 0.5, duration = 0.3) {
+    const ctx = getAudio();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(60 + speed * 200, ctx.currentTime);
+    osc.frequency.linearRampToValueAtTime(80 + speed * 280, ctx.currentTime + duration);
+    gain.gain.setValueAtTime(0.08, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime + duration);
+  },
+
+  honk() {
+    const ctx = getAudio();
+    const o1 = ctx.createOscillator();
+    const o2 = ctx.createOscillator();
+    const g = ctx.createGain();
+    o1.type = 'square'; o1.frequency.value = 340;
+    o2.type = 'square'; o2.frequency.value = 460;
+    g.gain.setValueAtTime(0.12, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+    o1.connect(g); o2.connect(g); g.connect(ctx.destination);
+    o1.start(); o2.start(); o1.stop(ctx.currentTime + 0.4); o2.stop(ctx.currentTime + 0.4);
+  },
+
+  screech() {
+    const ctx = getAudio();
+    const bufSize = ctx.sampleRate * 0.5;
+    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass'; filter.frequency.value = 3000; filter.Q.value = 15;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.15, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+    src.connect(filter).connect(g).connect(ctx.destination);
+    src.start(); src.stop(ctx.currentTime + 0.5);
+  },
+
+  crash() {
+    const ctx = getAudio();
+    const bufSize = ctx.sampleRate * 0.6;
+    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.25, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+    src.connect(g).connect(ctx.destination);
+    src.start(); src.stop(ctx.currentTime + 0.6);
+  },
+
+  boost() {
+    const ctx = getAudio();
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(200, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(1200, ctx.currentTime + 0.5);
+    g.gain.setValueAtTime(0.1, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+    osc.connect(g).connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime + 0.5);
+  },
+
+  coin() {
+    const ctx = getAudio();
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(800, ctx.currentTime);
+    osc.frequency.setValueAtTime(1200, ctx.currentTime + 0.08);
+    g.gain.setValueAtTime(0.1, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+    osc.connect(g).connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime + 0.2);
+  },
+
+  levelUp() {
+    const ctx = getAudio();
+    [523, 659, 784, 1047].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      g.gain.setValueAtTime(0, ctx.currentTime + i * 0.12);
+      g.gain.linearRampToValueAtTime(0.08, ctx.currentTime + i * 0.12 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.3);
+      osc.connect(g).connect(ctx.destination);
+      osc.start(ctx.currentTime + i * 0.12);
+      osc.stop(ctx.currentTime + i * 0.12 + 0.3);
+    });
+  }
+};
+
+// ═══════════════════════════════════════════
+//  CAR DRAWING (SVG / Canvas)
+// ═══════════════════════════════════════════
+
+function drawCarTopDown(ctx, x, y, w, h, color = '#e63946') {
+  ctx.save();
+  ctx.translate(x, y);
+
+  // Body
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.roundRect(-w/2, -h/2, w, h, [w*0.3, w*0.3, w*0.15, w*0.15]);
+  ctx.fill();
+
+  // Windshield
+  ctx.fillStyle = 'rgba(100,200,255,0.4)';
+  ctx.beginPath();
+  ctx.roundRect(-w*0.35, -h*0.15, w*0.7, h*0.22, 4);
+  ctx.fill();
+
+  // Rear window
+  ctx.fillStyle = 'rgba(100,200,255,0.3)';
+  ctx.beginPath();
+  ctx.roundRect(-w*0.28, h*0.15, w*0.56, h*0.15, 3);
+  ctx.fill();
+
+  // Wheels
+  ctx.fillStyle = '#222';
+  const ww = w * 0.18, wh = h * 0.18;
+  ctx.fillRect(-w/2 - ww*0.3, -h*0.32, ww, wh);
+  ctx.fillRect(w/2 - ww*0.7, -h*0.32, ww, wh);
+  ctx.fillRect(-w/2 - ww*0.3, h*0.18, ww, wh);
+  ctx.fillRect(w/2 - ww*0.7, h*0.18, ww, wh);
+
+  // Headlights
+  ctx.fillStyle = '#ffd700';
+  ctx.beginPath();
+  ctx.arc(-w*0.28, -h/2 + 4, 3, 0, Math.PI * 2);
+  ctx.arc(w*0.28, -h/2 + 4, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Taillights
+  ctx.fillStyle = '#ff3333';
+  ctx.beginPath();
+  ctx.arc(-w*0.28, h/2 - 4, 3, 0, Math.PI * 2);
+  ctx.arc(w*0.28, h/2 - 4, 3, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawBikeTopDown(ctx, x, y, h, color = '#3b82f6') {
+  ctx.save();
+  ctx.translate(x, y);
+  const w = 14;
+
+  // Body
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.roundRect(-w/2, -h/2, w, h, [w*0.4, w*0.4, w*0.2, w*0.2]);
+  ctx.fill();
+
+  // Wheels
+  ctx.fillStyle = '#222';
+  ctx.beginPath();
+  ctx.ellipse(0, -h/2 + 5, 5, 7, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, h/2 - 5, 5, 7, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Rider head
+  ctx.fillStyle = '#ff6b6b';
+  ctx.beginPath();
+  ctx.arc(0, -h*0.05, 5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+
+const SAVE_KEY = 'jsquest_ch2';
+let S = load();
+
+function defaults() { return { xp: 0, done: {}, stars: {} }; }
+function load() { try { const s = JSON.parse(localStorage.getItem(SAVE_KEY)); return s ? { ...defaults(), ...s } : defaults(); } catch(e) { return defaults(); } }
+function save() { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }
+function resetAll() { if (confirm('Reset all Chapter 2 progress?')) { S = defaults(); save(); goMap(); updateBar(); } }
+function addXP(n) { S.xp += n; save(); updateBar(); }
+function updateBar() {
+  const lvl = Math.floor(S.xp / 120) + 1;
+  document.getElementById('xpLabel').textContent = `${S.xp} XP (Lvl ${lvl})`;
+  document.getElementById('xpBar').style.width = `${(S.xp % 120) / 120 * 100}%`;
+}
+
+// ═══════════════════════════════════════════
+//  LEVELS
+// ═══════════════════════════════════════════
+
+const LEVELS = [
+  // ── LEVEL 1: DOM Manipulation ──
+  {
+    id: 'dom', icon: '🏎️', title: 'DOM — Build Your Dashboard',
+    desc: 'querySelector, textContent, style — control what\'s on screen',
+    xp: 40, reward: 'dashboard',
+    challenges: [
+      {
+        type: 'story', emoji: '🏎️', title: 'Welcome to the Garage!',
+        body: `Every racing game needs a <code>dashboard</code> — speedometer, RPM gauge, fuel level.\n\nBut how does JavaScript talk to the webpage? Through the <code>DOM</code> (Document Object Model). It lets you find elements, change text, update styles — all with code!\n\nLet's build a car dashboard using JS.`
+      },
+      {
+        type: 'teach', heading: 'Selecting & Changing Elements',
+        code: `<span class="cm">// Find an element by its CSS selector</span>\n<span class="kw">const</span> title = document.<span class="hl">querySelector</span>(<span class="st">".title"</span>);\n\n<span class="cm">// Change its text</span>\ntitle.<span class="hl">textContent</span> = <span class="st">"Speed Racer"</span>;\n\n<span class="cm">// Change its style</span>\ntitle.<span class="hl">style</span>.color = <span class="st">"red"</span>;\ntitle.<span class="hl">style</span>.fontSize = <span class="st">"24px"</span>;\n\n<span class="cm">// Change its HTML</span>\ntitle.<span class="hl">innerHTML</span> = <span class="st">"Speed &lt;em&gt;Racer&lt;/em&gt;"</span>;`
+      },
+      {
+        type: 'mcq',
+        question: 'Which method finds the FIRST element matching a CSS selector?',
+        options: ['document.getElementById()', 'document.querySelector()', 'document.findElement()', 'document.getSelector()'],
+        correct: 1, hint: 'It "queries" using a CSS "selector"'
+      },
+      {
+        type: 'mcq',
+        question: 'How do you change the text inside a <div> element?',
+        options: ['element.text = "hi"', 'element.textContent = "hi"', 'element.value = "hi"', 'element.setText("hi")'],
+        correct: 1, hint: 'The property is called textContent'
+      },
+      {
+        type: 'fill',
+        question: 'Select the element with class "speed" and change its text:',
+        codeBefore: 'const el = document.',
+        codeAfter: '(".speed");\nel.textContent = "120 km/h";',
+        blank: 'querySelector', accept: ['querySelector'],
+        hint: 'The method that queries by CSS selector'
+      },
+      {
+        type: 'code',
+        question: 'The page has a div: <div id="fuel">100%</div>\n\nWrite code that selects it and changes its text to "75%" and its color to "orange".',
+        starter: '',
+        setup: '<div id="fuel">100%</div>',
+        validate: (code, doc) => {
+          try {
+            const el = doc.getElementById('fuel');
+            new Function('document', code)(doc);
+            if (el.textContent !== '75%') return { pass: false, msg: `Text should be "75%", got "${el.textContent}"` };
+            if (el.style.color !== 'orange') return { pass: false, msg: `Color should be "orange", got "${el.style.color}"` };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'First select the element (remember # for IDs), then you need to change two properties on it — one for what it says, one for how it looks'
+      },
+      {
+        type: 'teach', heading: 'createElement & appendChild',
+        code: `<span class="cm">// Create a brand new element</span>\n<span class="kw">const</span> div = document.<span class="hl">createElement</span>(<span class="st">"div"</span>);\ndiv.textContent = <span class="st">"Turbo Mode!"</span>;\ndiv.style.color = <span class="st">"red"</span>;\n\n<span class="cm">// Add it to the page</span>\ndocument.body.<span class="hl">appendChild</span>(div);\n\n<span class="cm">// Insert inside a specific parent</span>\n<span class="kw">const</span> dashboard = document.querySelector(<span class="st">".dashboard"</span>);\ndashboard.<span class="hl">appendChild</span>(div);`
+      },
+      {
+        type: 'code',
+        question: 'The page has a <div id="garage"></div>.\n\nCreate 3 paragraph elements with text "Car 1", "Car 2", "Car 3" and append them inside the garage div. Use a loop!',
+        starter: '',
+        setup: '<div id="garage"></div>',
+        validate: (code, doc) => {
+          try {
+            new Function('document', code)(doc);
+            const g = doc.getElementById('garage');
+            const kids = g.querySelectorAll('p');
+            if (kids.length !== 3) return { pass: false, msg: `Expected 3 <p> elements, found ${kids.length}` };
+            if (kids[0].textContent !== 'Car 1') return { pass: false, msg: `First paragraph should say "Car 1"` };
+            if (kids[2].textContent !== 'Car 3') return { pass: false, msg: `Third paragraph should say "Car 3"` };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'Think of 3 steps in a loop: create the element, put text in it, then attach it to the parent. What method creates a new HTML element?'
+      }
+    ]
+  },
+
+  // ── LEVEL 2: Events ──
+  {
+    id: 'events', icon: '🎮', title: 'Events — Wire Up Controls',
+    desc: 'addEventListener, keyboard & click events — make things interactive',
+    xp: 50, reward: 'controls',
+    challenges: [
+      {
+        type: 'story', emoji: '🎮', title: 'Make It Interactive!',
+        body: `A dashboard is cool but it just sits there. To make a game, you need <code>events</code> — code that runs when the player does something.\n\nClick a button? → <code>"click"</code> event\nPress a key? → <code>"keydown"</code> event\nMove the mouse? → <code>"mousemove"</code> event\n\nLet's wire up car controls!`
+      },
+      {
+        type: 'teach', heading: 'addEventListener',
+        code: `<span class="cm">// Listen for clicks on a button</span>\n<span class="kw">const</span> btn = document.querySelector(<span class="st">"#honk"</span>);\n\nbtn.<span class="hl">addEventListener</span>(<span class="st">"click"</span>, <span class="kw">function</span>() {\n  alert(<span class="st">"BEEP BEEP! 🚗"</span>);\n});\n\n<span class="cm">// Arrow function version</span>\nbtn.<span class="hl">addEventListener</span>(<span class="st">"click"</span>, () => {\n  alert(<span class="st">"BEEP BEEP! 🚗"</span>);\n});\n\n<span class="cm">// Keyboard events (on the whole document)</span>\ndocument.<span class="hl">addEventListener</span>(<span class="st">"keydown"</span>, (event) => {\n  console.log(event.<span class="hl">key</span>);  <span class="cm">// "ArrowUp", "a", " ", etc.</span>\n});`
+      },
+      {
+        type: 'mcq',
+        question: 'What is the correct way to listen for key presses?',
+        options: [
+          'document.onKeyPress(fn)',
+          'document.addEventListener("keydown", fn)',
+          'document.listenFor("key", fn)',
+          'document.keydown(fn)'
+        ],
+        correct: 1, hint: 'add + Event + Listener'
+      },
+      {
+        type: 'mcq',
+        question: 'Inside a keyboard event handler, how do you check which key was pressed?',
+        options: ['event.key', 'event.button', 'event.which', 'event.char'],
+        correct: 0, hint: 'The .key property gives you the key name like "ArrowUp"'
+      },
+      {
+        type: 'code',
+        question: 'The page has a button: <button id="horn">Honk!</button> and a <div id="msg"></div>.\n\nAdd a click event listener to the button that changes the msg div\'s text to "BEEP BEEP!"',
+        starter: '',
+        setup: '<button id="horn">Honk!</button><div id="msg"></div>',
+        validate: (code, doc) => {
+          try {
+            new Function('document', code)(doc);
+            const btn = doc.getElementById('horn');
+            btn.click();
+            const msg = doc.getElementById('msg');
+            if (msg.textContent !== 'BEEP BEEP!') return { pass: false, msg: `After clicking, msg should say "BEEP BEEP!", got "${msg.textContent}"` };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'You need to: 1) grab the button by its ID, 2) attach a listener for the right event type, 3) inside the handler, find the msg div and update its text'
+      },
+      {
+        type: 'teach', heading: 'The event object',
+        code: `<span class="cm">// The event object gives you info about what happened</span>\n\ndocument.addEventListener(<span class="st">"keydown"</span>, (event) => {\n  <span class="kw">if</span> (event.key === <span class="st">"ArrowUp"</span>) {\n    console.log(<span class="st">"Accelerate! 🏎️"</span>);\n  } <span class="kw">else if</span> (event.key === <span class="st">"ArrowDown"</span>) {\n    console.log(<span class="st">"Brake! 🛑"</span>);\n  } <span class="kw">else if</span> (event.key === <span class="st">" "</span>) {\n    console.log(<span class="st">"HONK! 📯"</span>);  <span class="cm">// spacebar</span>\n  }\n});\n\n<span class="cm">// Prevent default browser behavior</span>\nevent.<span class="hl">preventDefault</span>();  <span class="cm">// stops page scroll on arrow keys</span>`
+      },
+      {
+        type: 'code',
+        question: 'Write a function called `setupControls` that:\n1. Listens for "keydown" on document\n2. If key is "ArrowUp" → set speed div text to "FAST"\n3. If key is "ArrowDown" → set speed div text to "SLOW"\n4. If key is " " (space) → set speed div text to "HONK!"\n\nThe page has: <div id="speed">IDLE</div>',
+        starter: 'function setupControls() {\n  \n}',
+        setup: '<div id="speed">IDLE</div>',
+        validate: (code, doc) => {
+          try {
+            new Function('document', code + '\nsetupControls();')(doc);
+            const spd = doc.getElementById('speed');
+            doc.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
+            if (spd.textContent !== 'FAST') return { pass: false, msg: `ArrowUp should set text to "FAST", got "${spd.textContent}"` };
+            doc.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
+            if (spd.textContent !== 'SLOW') return { pass: false, msg: `ArrowDown should set text to "SLOW"` };
+            doc.dispatchEvent(new KeyboardEvent('keydown', { key: ' ' }));
+            if (spd.textContent !== 'HONK!') return { pass: false, msg: `Space should set text to "HONK!"` };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'Listen for "keydown" on the document. The event object has a .key property — compare it to the key names. Then find the speed div and change its text.'
+      }
+    ]
+  },
+
+  // ── LEVEL 3: Timers & Animation ──
+  {
+    id: 'animation', icon: '💨', title: 'Animation — Make It Move!',
+    desc: 'setInterval, requestAnimationFrame — game loops & smooth motion',
+    xp: 50, reward: 'racer',
+    challenges: [
+      {
+        type: 'story', emoji: '💨', title: 'Lights... Camera... Action!',
+        body: `Static pages are boring. Games need <code>animation</code> — things that move and change every frame!\n\n<code>setInterval(fn, ms)</code> — runs a function every X milliseconds\n<code>requestAnimationFrame(fn)</code> — runs a function every frame (~60fps)\n\nThis is how game loops work. Every frame: update positions → redraw → repeat!`
+      },
+      {
+        type: 'teach', heading: 'Timer functions',
+        code: `<span class="cm">// Run once after a delay</span>\n<span class="hl">setTimeout</span>(() => {\n  console.log(<span class="st">"3... 2... 1... GO!"</span>);\n}, <span class="nm">3000</span>);  <span class="cm">// 3 seconds</span>\n\n<span class="cm">// Run repeatedly</span>\n<span class="kw">let</span> speed = <span class="nm">0</span>;\n<span class="kw">const</span> timer = <span class="hl">setInterval</span>(() => {\n  speed += <span class="nm">10</span>;\n  console.log(<span class="st">\`Speed: \${speed} km/h\`</span>);\n  <span class="kw">if</span> (speed >= <span class="nm">100</span>) <span class="hl">clearInterval</span>(timer);  <span class="cm">// stop!</span>\n}, <span class="nm">500</span>);  <span class="cm">// every 500ms</span>\n\n<span class="cm">// Smooth animation (preferred for games)</span>\n<span class="kw">function</span> <span class="hl">gameLoop</span>() {\n  update();   <span class="cm">// move things</span>\n  draw();     <span class="cm">// redraw</span>\n  <span class="hl">requestAnimationFrame</span>(gameLoop);  <span class="cm">// next frame</span>\n}\ngameLoop();  <span class="cm">// start!</span>`
+      },
+      {
+        type: 'mcq',
+        question: 'setInterval(fn, 1000) does what?',
+        options: ['Runs fn once after 1 second', 'Runs fn every 1 second', 'Runs fn 1000 times', 'Waits 1 second then stops'],
+        correct: 1, hint: 'setInterval REPEATS. setTimeout runs ONCE.'
+      },
+      {
+        type: 'mcq',
+        question: 'How do you STOP a setInterval?',
+        options: ['stop()', 'clearInterval(timerId)', 'setInterval.stop()', 'pause()'],
+        correct: 1, hint: 'You "clear" the interval using its ID'
+      },
+      {
+        type: 'fill',
+        question: 'Stop the timer after speed reaches 200:',
+        codeBefore: 'let speed = 0;\nconst id = setInterval(() => {\n  speed += 10;\n  if (speed >= 200) ',
+        codeAfter: '(id);\n}, 100);',
+        blank: 'clearInterval', accept: ['clearInterval'],
+        hint: 'To stop a setInterval, you "clear" it'
+      },
+      {
+        type: 'code',
+        question: 'Write a function `countdown` that takes a number `n` and a callback `onDone`.\nIt should log n, n-1, n-2... 1, "GO!" with 1 second between each.\nAfter "GO!" it should call onDone().\n\nExample: countdown(3, fn) logs: 3, 2, 1, "GO!" then calls fn.',
+        starter: 'function countdown(n, onDone) {\n  \n}',
+        validate: (code) => {
+          try {
+            let logs = [];
+            let doneCalled = false;
+            const mockLog = (v) => logs.push(v);
+            const fn = new Function('console', code + `
+              return new Promise(resolve => {
+                countdown(3, () => { resolve('done'); });
+                // Simulate fast for testing
+              });
+            `)({ log: mockLog });
+            // Since we can't easily test timers, check structure
+            if (!/setInterval|setTimeout/.test(code)) return { pass: false, msg: 'Use setInterval or setTimeout for the timing' };
+            if (!/clearInterval|clearTimeout/.test(code) && !/setTimeout/.test(code)) return { pass: false, msg: 'Make sure to stop the timer!' };
+            if (!/onDone/.test(code)) return { pass: false, msg: 'Don\'t forget to call onDone() when done!' };
+            if (!/GO/.test(code)) return { pass: false, msg: 'Log "GO!" after the countdown' };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'You need a repeating timer that fires every 1000ms. Each time it fires, log the current number and decrease it. When do you stop the timer and what do you do then?'
+      },
+      {
+        type: 'teach', heading: 'Canvas basics for games',
+        code: `<span class="cm">// Get the canvas and its drawing context</span>\n<span class="kw">const</span> canvas = document.querySelector(<span class="st">"canvas"</span>);\n<span class="kw">const</span> ctx = canvas.<span class="hl">getContext</span>(<span class="st">"2d"</span>);\n\n<span class="cm">// Draw a rectangle (x, y, width, height)</span>\nctx.fillStyle = <span class="st">"red"</span>;\nctx.<span class="hl">fillRect</span>(<span class="nm">50</span>, <span class="nm">100</span>, <span class="nm">40</span>, <span class="nm">60</span>);\n\n<span class="cm">// Clear the canvas (needed each frame)</span>\nctx.<span class="hl">clearRect</span>(<span class="nm">0</span>, <span class="nm">0</span>, canvas.width, canvas.height);\n\n<span class="cm">// Game loop pattern</span>\n<span class="kw">let</span> carX = <span class="nm">200</span>;\n<span class="kw">function</span> <span class="hl">gameLoop</span>() {\n  ctx.clearRect(<span class="nm">0</span>, <span class="nm">0</span>, canvas.width, canvas.height);\n  ctx.fillStyle = <span class="st">"red"</span>;\n  ctx.fillRect(carX, <span class="nm">200</span>, <span class="nm">40</span>, <span class="nm">60</span>);\n  carX += <span class="nm">1</span>;  <span class="cm">// move right each frame</span>\n  requestAnimationFrame(gameLoop);\n}\ngameLoop();`
+      },
+      {
+        type: 'mcq',
+        question: 'In a game loop, why do we call clearRect() every frame?',
+        options: [
+          'To free up memory',
+          'To erase the previous frame before drawing the new one',
+          'To reset the canvas size',
+          'It\'s not necessary'
+        ],
+        correct: 1, hint: 'Without clearing, you\'d see all previous positions stacked on top of each other!'
+      }
+    ]
+  },
+
+  // ── LEVEL 4: Scope & Closures ──
+  {
+    id: 'scope', icon: '🔧', title: 'Scope & Closures — Engine Tuning',
+    desc: 'Where variables live, closures, and why they matter for games',
+    xp: 50, reward: 'tuner',
+    challenges: [
+      {
+        type: 'story', emoji: '🔧', title: 'Under the Hood',
+        body: `A car engine has parts that only mechanics can access. JavaScript has a similar concept: <code>scope</code>.\n\nVariables defined inside a function can't be seen outside — they're <code>local</code>. Variables outside are <code>global</code>.\n\nA <code>closure</code> is when an inner function "remembers" variables from its outer function — even after the outer function is done. This is how we build game state!`
+      },
+      {
+        type: 'teach', heading: 'Scope & closures explained',
+        code: `<span class="kw">let</span> gear = <span class="nm">1</span>;  <span class="cm">// global — visible everywhere</span>\n\n<span class="kw">function</span> shiftUp() {\n  <span class="kw">let</span> maxGear = <span class="nm">6</span>;  <span class="cm">// local — only inside shiftUp</span>\n  <span class="kw">if</span> (gear < maxGear) gear++;\n}\n\n<span class="cm">// Closure: a function that "remembers" its environment</span>\n<span class="kw">function</span> <span class="hl">createSpeedometer</span>(maxSpeed) {\n  <span class="kw">let</span> speed = <span class="nm">0</span>;  <span class="cm">// private! hidden inside</span>\n  \n  <span class="kw">return</span> {\n    <span class="hl">accelerate</span>() { <span class="kw">if</span> (speed < maxSpeed) speed += <span class="nm">10</span>; },\n    <span class="hl">brake</span>()      { <span class="kw">if</span> (speed > <span class="nm">0</span>) speed -= <span class="nm">10</span>; },\n    <span class="hl">getSpeed</span>()   { <span class="kw">return</span> speed; }\n  };\n}\n\n<span class="kw">const</span> speedo = createSpeedometer(<span class="nm">200</span>);\nspeedo.accelerate();\nspeedo.getSpeed();  <span class="cm">// 10 — closure remembers speed!</span>`
+      },
+      {
+        type: 'mcq',
+        question: 'What does this code output?\n\nfunction outer() {\n  let x = 10;\n  function inner() { console.log(x); }\n  return inner;\n}\nconst fn = outer();\nfn();',
+        options: ['undefined', 'Error: x is not defined', '10', 'null'],
+        correct: 2, hint: 'The inner function "closes over" x — it remembers it!'
+      },
+      {
+        type: 'code',
+        question: 'Write a function `createCounter` that returns an object with two methods:\n- `increment()` — adds 1 to an internal count\n- `getCount()` — returns the current count\n\nThe count should start at 0 and be hidden (not directly accessible).',
+        starter: 'function createCounter() {\n  \n}',
+        validate: (code) => {
+          try {
+            const fn = new Function(code + `
+              const c = createCounter();
+              c.increment(); c.increment(); c.increment();
+              return [c.getCount(), typeof c.count];
+            `);
+            const [count, type] = fn();
+            if (count !== 3) return { pass: false, msg: `After 3 increments, getCount() should return 3, got ${count}` };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'The variable should live INSIDE createCounter (not returned directly). The returned object has methods that can still access it. That\'s the magic of closures!'
+      },
+      {
+        type: 'code',
+        question: 'Write a function `createCar` that takes `topSpeed` and returns an object with:\n- `accelerate()` — increases speed by 20 (max is topSpeed)\n- `brake()` — decreases speed by 20 (min is 0)\n- `getSpeed()` — returns current speed\n- `getGear()` — returns the gear (1 for 0-40, 2 for 41-80, 3 for 81-120, 4 for 121+)',
+        starter: 'function createCar(topSpeed) {\n  \n}',
+        validate: (code) => {
+          try {
+            const fn = new Function(code + `
+              const car = createCar(200);
+              car.accelerate(); car.accelerate(); car.accelerate();
+              const s = car.getSpeed();
+              const g = car.getGear();
+              car.brake(); car.brake(); car.brake(); car.brake();
+              const s2 = car.getSpeed();
+              return [s, g, s2];
+            `);
+            const [s, g, s2] = fn();
+            if (s !== 60) return { pass: false, msg: `After 3 accelerates (20 each), speed should be 60, got ${s}` };
+            if (g !== 2) return { pass: false, msg: `At speed 60, gear should be 2, got ${g}` };
+            if (s2 !== 0) return { pass: false, msg: `Speed should not go below 0, got ${s2}` };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'Same pattern as createCounter but with more methods. The gear is calculated FROM the current speed — think of it as ranges (0-40 is first gear, etc.)'
+      }
+    ]
+  },
+
+  // ── LEVEL 5: Destructuring & Spread ──
+  {
+    id: 'destruct', icon: '🏪', title: 'Destructuring — Garage Manager',
+    desc: 'Destructure objects/arrays, spread operator, rest params',
+    xp: 50, reward: 'garage',
+    challenges: [
+      {
+        type: 'story', emoji: '🏪', title: 'Managing Your Garage',
+        body: `Your garage has lots of cars, each with many properties. <code>Destructuring</code> lets you pull out exactly what you need in one line!\n\n<code>const { name, speed } = car;</code>\n\nAnd the <code>spread operator ...</code> lets you copy and combine arrays/objects easily — perfect for managing car collections!`
+      },
+      {
+        type: 'teach', heading: 'Destructuring & spread',
+        code: `<span class="cm">// Object destructuring</span>\n<span class="kw">const</span> car = { name: <span class="st">"Mustang"</span>, hp: <span class="nm">450</span>, color: <span class="st">"red"</span> };\n<span class="kw">const</span> { <span class="hl">name</span>, <span class="hl">hp</span> } = car;  <span class="cm">// name="Mustang", hp=450</span>\n\n<span class="cm">// Array destructuring</span>\n<span class="kw">const</span> [<span class="hl">first</span>, <span class="hl">second</span>] = [<span class="st">"gold"</span>, <span class="st">"silver"</span>, <span class="st">"bronze"</span>];\n<span class="cm">// first="gold", second="silver"</span>\n\n<span class="cm">// Spread: copy & combine</span>\n<span class="kw">const</span> garage = [<span class="st">"Mustang"</span>, <span class="st">"Supra"</span>];\n<span class="kw">const</span> newGarage = [<span class="hl">...garage</span>, <span class="st">"GT-R"</span>];  <span class="cm">// ["Mustang","Supra","GT-R"]</span>\n\n<span class="cm">// Spread with objects</span>\n<span class="kw">const</span> upgraded = { <span class="hl">...car</span>, hp: <span class="nm">500</span>, turbo: <span class="kw">true</span> };\n<span class="cm">// { name:"Mustang", hp:500, color:"red", turbo:true }</span>\n\n<span class="cm">// Rest params: collect remaining args</span>\n<span class="kw">function</span> race(first, <span class="hl">...others</span>) {\n  console.log(<span class="st">\`Winner: \${first}\`</span>);\n  console.log(<span class="st">\`Others: \${others}\`</span>);\n}`
+      },
+      {
+        type: 'mcq',
+        question: 'What does const { hp } = { name: "Supra", hp: 335 } give you?',
+        options: ['{ hp: 335 }', '335', '"Supra"', 'undefined'],
+        correct: 1, hint: 'Destructuring pulls out the VALUE of the matching key'
+      },
+      {
+        type: 'mcq',
+        question: 'What does [...arr1, ...arr2] do?',
+        options: ['Subtracts arr2 from arr1', 'Combines both arrays into a new one', 'Compares the arrays', 'Sorts both arrays'],
+        correct: 1, hint: 'The spread operator "spreads" elements into a new array'
+      },
+      {
+        type: 'code',
+        question: 'Write a function `upgradeCar` that takes a car object and a `newHP` value. Return a NEW object (don\'t modify original) with the same properties but hp changed to newHP and a new property `upgraded: true`.\n\nUse the spread operator!',
+        starter: 'function upgradeCar(car, newHP) {\n  \n}',
+        validate: (code) => {
+          try {
+            const fn = new Function(code + `
+              const original = { name: "Civic", hp: 150, color: "blue" };
+              const upgraded = upgradeCar(original, 300);
+              return [original.hp, upgraded.hp, upgraded.upgraded, upgraded.name, upgraded.color];
+            `);
+            const [origHP, newHP, upg, name, color] = fn();
+            if (origHP !== 150) return { pass: false, msg: 'Original car should not be modified!' };
+            if (newHP !== 300) return { pass: false, msg: `Upgraded hp should be 300, got ${newHP}` };
+            if (upg !== true) return { pass: false, msg: 'upgraded should be true' };
+            if (name !== 'Civic') return { pass: false, msg: 'Name should be preserved' };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'The spread operator lets you copy all properties into a new object. If you list a property AFTER the spread, it overrides the copied one. Don\'t forget to add the new boolean property!'
+      },
+      {
+        type: 'code',
+        question: 'Write a function `raceResults` that takes any number of car name strings and returns an object:\n{ gold: first arg, silver: second arg, others: rest in an array }\n\nraceResults("Supra", "GT-R", "Civic", "Mustang") → { gold: "Supra", silver: "GT-R", others: ["Civic", "Mustang"] }',
+        starter: '',
+        validate: (code) => {
+          try {
+            const fn = new Function(code + `
+              const r = raceResults("Supra", "GT-R", "Civic", "Mustang");
+              return [r.gold, r.silver, JSON.stringify(r.others)];
+            `);
+            const [g, s, o] = fn();
+            if (g !== 'Supra') return { pass: false, msg: `gold should be "Supra"` };
+            if (s !== 'GT-R') return { pass: false, msg: `silver should be "GT-R"` };
+            if (o !== '["Civic","Mustang"]') return { pass: false, msg: `others should be ["Civic","Mustang"]` };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'The first two parameters get their own names. The REST of the arguments need to be collected into an array — there\'s an operator with three dots that does this. Then return an object using shorthand property names.'
+      }
+    ]
+  },
+
+  // ── LEVEL 6: BOSS — Build a Racing Game ──
+  {
+    id: 'boss', icon: '🏁', title: 'BOSS — Build the Race!',
+    desc: 'Combine DOM, events, animation & closures into a full game',
+    xp: 80, reward: 'fullgame',
+    challenges: [
+      {
+        type: 'story', emoji: '🏁', title: 'The Final Race!',
+        body: `You've learned DOM, Events, Animation, Scope, and Destructuring. Now let's combine EVERYTHING.\n\nEach challenge builds one piece of the racing game engine. After you complete them all, you unlock the full playable racing game!\n\nEngine starting... 🏎️💨`
+      },
+      {
+        type: 'code',
+        question: 'Write a function `createGameState` that returns an object with:\n- player: { x: 200, y: 500, speed: 0, score: 0 }\n- obstacles: [] (empty array)\n- isRunning: false\n- start() method that sets isRunning to true\n- stop() method that sets isRunning to false\n\nUse closure to keep the state private!',
+        starter: 'function createGameState() {\n  \n}',
+        validate: (code) => {
+          try {
+            const fn = new Function(code + `
+              const game = createGameState();
+              const before = game.isRunning;
+              game.start();
+              const after = game.isRunning;
+              game.stop();
+              const end = game.isRunning;
+              return [game.player.x, game.player.score, before, after, end, Array.isArray(game.obstacles)];
+            `);
+            const [x, score, before, after, end, isArr] = fn();
+            if (x !== 200) return { pass: false, msg: `player.x should be 200` };
+            if (score !== 0) return { pass: false, msg: `player.score should start at 0` };
+            if (before !== false) return { pass: false, msg: `isRunning should start as false` };
+            if (after !== true) return { pass: false, msg: `start() should set isRunning to true` };
+            if (end !== false) return { pass: false, msg: `stop() should set isRunning to false` };
+            if (!isArr) return { pass: false, msg: `obstacles should be an array` };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'Build an object literal with nested objects for player, an empty array for obstacles, a boolean flag, and two methods. The methods just flip the boolean.'
+      },
+      {
+        type: 'code',
+        question: 'Write a function `spawnObstacle` that takes the game\'s obstacle array and canvas width.\nIt should push a new obstacle object: { x: random(0 to width-40), y: -50, width: 40, height: 40 }\nReturn the new obstacle.',
+        starter: 'function spawnObstacle(obstacles, canvasWidth) {\n  \n}',
+        validate: (code) => {
+          try {
+            const fn = new Function(code + `
+              const obs = [];
+              const o = spawnObstacle(obs, 400);
+              return [obs.length, o.y, o.width, o.x >= 0 && o.x <= 360, typeof o.x];
+            `);
+            const [len, y, w, inRange, type] = fn();
+            if (len !== 1) return { pass: false, msg: `Should push 1 obstacle, array has ${len}` };
+            if (y !== -50) return { pass: false, msg: `y should be -50 (start above screen)` };
+            if (w !== 40) return { pass: false, msg: `width should be 40` };
+            if (!inRange) return { pass: false, msg: `x should be random between 0 and canvasWidth - 40` };
+            if (type !== 'number') return { pass: false, msg: `x should be a number` };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'You need a random x position that stays within bounds (think about the obstacle width). Create the object, add it to the array, and return it.'
+      },
+      {
+        type: 'code',
+        question: 'Write a function `checkCollision` that takes two rectangle objects (each with x, y, width, height) and returns true if they overlap, false otherwise.\n\nThis is the core of hit detection in every game!',
+        starter: 'function checkCollision(rect1, rect2) {\n  \n}',
+        validate: (code) => {
+          try {
+            const fn = new Function(code + `
+              const a = checkCollision({x:0,y:0,width:50,height:50}, {x:30,y:30,width:50,height:50});
+              const b = checkCollision({x:0,y:0,width:50,height:50}, {x:100,y:100,width:50,height:50});
+              const c = checkCollision({x:0,y:0,width:10,height:10}, {x:5,y:5,width:10,height:10});
+              return [a, b, c];
+            `);
+            const [a, b, c] = fn();
+            if (a !== true) return { pass: false, msg: `Overlapping rects should return true` };
+            if (b !== false) return { pass: false, msg: `Far-apart rects should return false` };
+            if (c !== true) return { pass: false, msg: `Partially overlapping should return true` };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'Think about when two boxes DON\'T touch: one is completely to the left, right, above, or below the other. If NONE of those are true, they must be overlapping. Use the x, y, width, height of each rect.'
+      },
+      {
+        type: 'code',
+        question: 'Write a function `updateScore` that takes a score object { points, multiplier, combo } and an action string:\n- "coin" → points += 10 * multiplier, combo += 1\n- "dodge" → points += 5 * multiplier, combo += 1\n- "crash" → combo = 0, multiplier = 1\n\nIf combo reaches 5, set multiplier to 2. If combo reaches 10, set multiplier to 3.\nReturn the updated object (use spread to avoid mutation).',
+        starter: 'function updateScore(score, action) {\n  \n}',
+        validate: (code) => {
+          try {
+            const fn = new Function(code + `
+              let s = { points: 0, multiplier: 1, combo: 0 };
+              s = updateScore(s, "coin"); // 10pts, combo 1
+              s = updateScore(s, "coin"); // 20pts, combo 2
+              s = updateScore(s, "dodge"); // 25pts, combo 3
+              const mid = { ...s };
+              s = updateScore(s, "crash"); // combo 0, mult 1
+              return [mid.points, mid.combo, s.combo, s.multiplier];
+            `);
+            const [pts, combo, crashCombo, crashMult] = fn();
+            if (pts !== 25) return { pass: false, msg: `After coin+coin+dodge, points should be 25, got ${pts}` };
+            if (combo !== 3) return { pass: false, msg: `Combo should be 3, got ${combo}` };
+            if (crashCombo !== 0) return { pass: false, msg: `Crash should reset combo to 0` };
+            if (crashMult !== 1) return { pass: false, msg: `Crash should reset multiplier to 1` };
+            return { pass: true };
+          } catch(e) { return { pass: false, msg: e.message }; }
+        },
+        hint: 'Create a copy of the score object (don\'t change the original!). Then use if/else to handle each action. After updating combo, check if it crossed the threshold for a higher multiplier.'
+      }
+    ]
+  }
+];
+
+// ═══════════════════════════════════════════
+//  RENDERING
+// ═══════════════════════════════════════════
+
+let curLevel = null, curCh = 0, results = [];
+
+function goMap() {
+  document.getElementById('mapView').classList.add('active');
+  document.getElementById('chView').classList.remove('active');
+  document.getElementById('gameView').classList.remove('active');
+  renderMap(); updateBar();
+  // Stop any running games
+  if (window._gameRAF) { cancelAnimationFrame(window._gameRAF); window._gameRAF = null; }
+}
+
+function renderMap() {
+  const el = document.getElementById('levelList');
+  el.innerHTML = '';
+  LEVELS.forEach((lv, i) => {
+    const done = S.done[lv.id];
+    const locked = i > 0 && !S.done[LEVELS[i-1].id];
+    const cur = !done && !locked;
+    const stars = S.stars[lv.id] || 0;
+
+    if (i > 0) {
+      const p = document.createElement('div');
+      p.className = 'pipe' + (S.done[LEVELS[i-1].id] ? ' done' : '');
+      el.appendChild(p);
+    }
+    const n = document.createElement('div');
+    n.className = `lnode${done?' done':''}${locked?' locked':''}${cur?' cur':''}`;
+    n.innerHTML = `
+      <div class="licon">${lv.icon}</div>
+      <div class="linfo"><h3>${lv.title}</h3><p>${lv.desc}</p></div>
+      ${done ? `<div class="lstars">${'⭐'.repeat(stars)}</div>` : ''}
+    `;
+    if (!locked) n.onclick = () => startLevel(i);
+    el.appendChild(n);
+
+    // Show "Play Reward" button for completed levels
+    if (done && lv.reward) {
+      const rb = document.createElement('button');
+      rb.className = 'btn btn-s';
+      rb.style.cssText = 'margin-top: 4px; font-size: 0.75rem;';
+      rb.textContent = '🎮 Play Reward';
+      rb.onclick = (e) => { e.stopPropagation(); showReward(lv.reward); };
+      // Insert inside the node
+      n.appendChild(rb);
+      n.style.flexWrap = 'wrap';
+    }
+  });
+}
+
+function startLevel(i) {
+  curLevel = i; curCh = 0; results = [];
+  document.getElementById('mapView').classList.remove('active');
+  document.getElementById('chView').classList.add('active');
+  renderCh();
+}
+
+function renderCh() {
+  const lv = LEVELS[curLevel];
+  const ch = lv.challenges[curCh];
+  const el = document.getElementById('chContent');
+
+  // Dots
+  document.getElementById('dots').innerHTML = lv.challenges.map((_, i) =>
+    `<div class="dot${i < curCh ? ' ok' : ''}${i === curCh ? ' on' : ''}"></div>`
+  ).join('');
+
+  switch (ch.type) {
+    case 'story': renderStory(ch, el); break;
+    case 'teach': renderTeach(ch, el); break;
+    case 'mcq': renderMCQ(ch, el); break;
+    case 'fill': renderFill(ch, el); break;
+    case 'code': renderCode(ch, el); break;
+  }
+}
+
+function renderStory(ch, el) {
+  el.innerHTML = `
+    <div class="story-card">
+      <span class="emo">${ch.emoji}</span>
+      <h2>${ch.title}</h2>
+      <p>${ch.body.replace(/\n/g,'<br>')}</p>
+    </div>
+    <button class="btn btn-p" onclick="SFX.engine(0.3);nextCh()">Let's Go! →</button>
+  `;
+}
+
+function renderTeach(ch, el) {
+  el.innerHTML = `
+    <div class="teach-block">
+      <h3>${ch.heading}</h3>
+      <pre>${ch.code}</pre>
+    </div>
+    <button class="btn btn-p" onclick="nextCh()">Got it →</button>
+  `;
+}
+
+let selMCQ = -1;
+function renderMCQ(ch, el) {
+  selMCQ = -1;
+  el.innerHTML = `
+    <div class="ch-card">
+      <h3>Choose the correct answer</h3>
+      <p style="font-family:'JetBrains Mono',monospace;white-space:pre-wrap;">${ch.question.replace(/\n/g,'<br>')}</p>
+      <div class="mcq-opts" id="opts">
+        ${ch.options.map((o, i) => `<div class="mcq-opt" data-i="${i}" onclick="pickMCQ(${i})">${o}</div>`).join('')}
+      </div>
+      <button class="btn btn-p" id="mcqBtn" disabled onclick="checkMCQ()">Check</button>
+      <div class="fb" id="fb"></div>
+    </div>
+  `;
+}
+
+function pickMCQ(i) {
+  selMCQ = i;
+  document.querySelectorAll('.mcq-opt').forEach((o, j) => o.classList.toggle('sel', j === i));
+  document.getElementById('mcqBtn').disabled = false;
+}
+
+function checkMCQ() {
+  const ch = LEVELS[curLevel].challenges[curCh];
+  const opts = document.querySelectorAll('.mcq-opt');
+  const fb = document.getElementById('fb');
+  opts.forEach((o, i) => { o.onclick = null; if (i === ch.correct) o.classList.add('ok'); if (i === selMCQ && i !== ch.correct) o.classList.add('bad'); });
+  if (selMCQ === ch.correct) {
+    SFX.coin();
+    fb.className = 'fb show win'; fb.innerHTML = '✓ Correct!';
+    results.push(true);
+  } else {
+    fb.className = 'fb show lose'; fb.innerHTML = `✗ Not quite. <div class="hint">${ch.hint}</div>`;
+    results.push(false);
+  }
+  const btn = document.getElementById('mcqBtn');
+  btn.textContent = 'Next →'; btn.disabled = false; btn.onclick = nextCh;
+}
+
+function renderFill(ch, el) {
+  el.innerHTML = `
+    <div class="ch-card">
+      <h3>Fill in the blank</h3>
+      <p>${ch.question}</p>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;background:var(--code-bg);padding:14px;border-radius:8px;line-height:2;">
+        ${ch.codeBefore}<input type="text" class="fill-inp" id="fillI" autocomplete="off" spellcheck="false">${ch.codeAfter}
+      </div>
+      <div class="btn-row" style="margin-top:14px;"><button class="btn btn-p" onclick="checkFill()">Check</button></div>
+      <div class="fb" id="fb"></div>
+    </div>
+  `;
+  document.getElementById('fillI').addEventListener('keydown', e => { if (e.key === 'Enter') checkFill(); });
+}
+
+function checkFill() {
+  const ch = LEVELS[curLevel].challenges[curCh];
+  const inp = document.getElementById('fillI');
+  const fb = document.getElementById('fb');
+  if (ch.accept.includes(inp.value.trim())) {
+    SFX.coin(); inp.classList.add('ok');
+    fb.className = 'fb show win'; fb.innerHTML = '✓ Perfect!';
+    results.push(true); setTimeout(nextCh, 700);
+  } else {
+    inp.classList.add('bad'); setTimeout(() => inp.classList.remove('bad'), 350);
+    fb.className = 'fb show lose'; fb.innerHTML = `✗ Try again. <div class="hint">${ch.hint}</div>`;
+    results.push(false);
+  }
+}
+
+function renderCode(ch, el) {
+  el.innerHTML = `
+    <div class="ch-card">
+      <h3>Write Code</h3>
+      <p>${ch.question.replace(/\n/g,'<br>')}</p>
+      <textarea class="code-editor" id="codeI" spellcheck="false">${ch.starter}</textarea>
+      <div class="console" id="out">Output will appear here...</div>
+      <div class="btn-row">
+        <button class="btn btn-p" onclick="runCode()">▶ Run & Check</button>
+        <button class="btn btn-s" onclick="showHint()">💡 Hint</button>
+      </div>
+      <div class="fb" id="fb"></div>
+    </div>
+  `;
+  document.getElementById('codeI').addEventListener('keydown', e => {
+    if (e.key === 'Tab') { e.preventDefault(); const t = e.target, s = t.selectionStart; t.value = t.value.substring(0,s)+'  '+t.value.substring(t.selectionEnd); t.selectionStart=t.selectionEnd=s+2; }
+  });
+}
+
+function runCode() {
+  const ch = LEVELS[curLevel].challenges[curCh];
+  const code = document.getElementById('codeI').value;
+  const out = document.getElementById('out');
+  const fb = document.getElementById('fb');
+  const ed = document.getElementById('codeI');
+
+  let result;
+  if (ch.setup) {
+    // DOM challenge: create an iframe-like environment
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    iframe.contentDocument.body.innerHTML = ch.setup;
+    result = ch.validate(code, iframe.contentDocument);
+    document.body.removeChild(iframe);
+  } else {
+    let logs = [];
+    const origLog = console.log;
+    console.log = (...a) => logs.push(a.map(x => typeof x === 'object' ? JSON.stringify(x) : String(x)).join(' '));
+    try {
+      result = ch.validate(code);
+    } catch(e) { result = { pass: false, msg: e.message }; }
+    console.log = origLog;
+    out.innerHTML = logs.length ? logs.map(l => `<div style="color:var(--text-dim)">&gt; ${l}</div>`).join('') : '<span style="color:var(--text-dim)">No output</span>';
+  }
+
+  if (result.pass) {
+    SFX.coin(); ed.classList.add('ok');
+    fb.className = 'fb show win'; fb.innerHTML = '✓ All tests passed!';
+    results.push(true); setTimeout(nextCh, 1000);
+  } else {
+    ed.classList.add('bad'); setTimeout(() => ed.classList.remove('bad'), 350);
+    fb.className = 'fb show lose'; fb.innerHTML = `✗ ${result.msg}`;
+    results.push(false);
+  }
+}
+
+function showHint() {
+  const ch = LEVELS[curLevel].challenges[curCh];
+  const fb = document.getElementById('fb');
+  fb.className = 'fb show'; fb.style.cssText = 'background:rgba(245,158,11,0.1);border:1px solid var(--orange);color:var(--orange);display:block;';
+  fb.innerHTML = `💡 ${ch.hint}`;
+}
+
+function nextCh() {
+  curCh++;
+  if (curCh >= LEVELS[curLevel].challenges.length) { completeLevel(); return; }
+  renderCh();
+}
+
+function completeLevel() {
+  const lv = LEVELS[curLevel];
+  const correct = results.filter(Boolean).length;
+  const total = results.length || 1;
+  const ratio = correct / total;
+  let stars = ratio >= 0.9 ? 3 : ratio >= 0.6 ? 2 : 1;
+
+  S.done[lv.id] = true;
+  if (stars > (S.stars[lv.id] || 0)) S.stars[lv.id] = stars;
+  addXP(lv.xp);
+  save();
+  SFX.levelUp();
+  spawnParts();
+
+  const rewardNames = {
+    dashboard: '🏎️ Car Dashboard Unlocked!',
+    controls: '🎮 Controllable Car Unlocked!',
+    racer: '💨 Dodge Racer Game Unlocked!',
+    tuner: '🔧 Car Tuner Unlocked!',
+    garage: '🏪 Garage Manager Unlocked!',
+    fullgame: '🏁 FULL RACING GAME UNLOCKED!'
+  };
+
+  document.getElementById('celE').textContent = ['🎉','🚀','🏆'][stars-1];
+  document.getElementById('celT').textContent = 'Level Complete!';
+  document.getElementById('celD').textContent = `${correct}/${total} challenges correct — ${stars} star${stars>1?'s':''}!`;
+  document.getElementById('celXP').textContent = `+${lv.xp} XP`;
+  document.getElementById('celR').textContent = rewardNames[lv.reward] || '';
+  document.getElementById('cel').classList.add('show');
+
+  const celBtn = document.getElementById('celBtn');
+  if (lv.reward) {
+    celBtn.textContent = '🎮 Play Reward!';
+    celBtn.onclick = () => { document.getElementById('cel').classList.remove('show'); showReward(lv.reward); };
+  } else {
+    celBtn.textContent = 'Continue';
+    celBtn.onclick = () => { document.getElementById('cel').classList.remove('show'); goMap(); };
+  }
+}
+
+function spawnParts() {
+  const em = ['🏎️','🏍️','💨','⭐','🔥','🏁','🏆'];
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement('div'); p.className = 'particle';
+    p.textContent = em[Math.floor(Math.random()*em.length)];
+    p.style.left = Math.random()*window.innerWidth+'px';
+    p.style.top = Math.random()*window.innerHeight*0.3+'px';
+    p.style.fontSize = (14+Math.random()*18)+'px';
+    p.style.animationDelay = Math.random()*0.5+'s';
+    document.body.appendChild(p); setTimeout(() => p.remove(), 2000);
+  }
+}
+
+// ═══════════════════════════════════════════
+//  REWARD GAMES
+// ═══════════════════════════════════════════
+
+function showReward(type) {
+  document.getElementById('mapView').classList.remove('active');
+  document.getElementById('chView').classList.remove('active');
+  document.getElementById('gameView').classList.add('active');
+
+  const el = document.getElementById('gameContent');
+
+  switch(type) {
+    case 'dashboard': buildDashboard(el); break;
+    case 'controls': buildControls(el); break;
+    case 'racer': buildRacer(el); break;
+    case 'tuner': buildTuner(el); break;
+    case 'garage': buildGarage(el); break;
+    case 'fullgame': buildFullGame(el); break;
+  }
+}
+
+// ── Reward 1: Interactive Dashboard ──
+function buildDashboard(el) {
+  el.innerHTML = `
+    <div class="story-card">
+      <h2>🏎️ Your Car Dashboard</h2>
+      <p>Click the pedals to see the dashboard respond in real-time!</p>
+    </div>
+    <div class="dashboard" id="dash">
+      <div class="dash-row">
+        <div class="gauge"><canvas id="speedGauge" width="120" height="120"></canvas><div class="gauge-label">Speed</div><div class="gauge-value" id="speedVal">0</div></div>
+        <div class="gauge"><canvas id="rpmGauge" width="120" height="120"></canvas><div class="gauge-label">RPM</div><div class="gauge-value" id="rpmVal">0</div></div>
+        <div class="gauge"><canvas id="fuelGauge" width="120" height="120"></canvas><div class="gauge-label">Fuel</div><div class="gauge-value" id="fuelVal">100</div></div>
+      </div>
+    </div>
+    <div class="btn-row" style="justify-content:center;gap:14px;">
+      <button class="btn btn-p" id="gasBtn" style="font-size:1.2rem;padding:14px 28px;">🏎️ GAS</button>
+      <button class="btn btn-s" id="brakeBtn" style="font-size:1.2rem;padding:14px 28px;">🛑 BRAKE</button>
+      <button class="btn btn-s" id="honkBtn" style="font-size:1.2rem;padding:14px 28px;">📯 HONK</button>
+    </div>
+  `;
+
+  let speed = 0, rpm = 0, fuel = 100;
+
+  function drawGauge(canvasId, value, max, color) {
+    const c = document.getElementById(canvasId);
+    if (!c) return;
+    const ctx = c.getContext('2d');
+    ctx.clearRect(0, 0, 120, 120);
+    // Track
+    ctx.beginPath(); ctx.arc(60, 60, 48, 0.75 * Math.PI, 0.25 * Math.PI);
+    ctx.strokeStyle = '#2a2a40'; ctx.lineWidth = 10; ctx.lineCap = 'round'; ctx.stroke();
+    // Fill
+    const pct = value / max;
+    const startA = 0.75 * Math.PI;
+    const endA = startA + pct * 1.5 * Math.PI;
+    ctx.beginPath(); ctx.arc(60, 60, 48, startA, endA);
+    ctx.strokeStyle = color; ctx.lineWidth = 10; ctx.lineCap = 'round'; ctx.stroke();
+  }
+
+  function update() {
+    if (fuel > 0) fuel = Math.max(0, fuel - speed * 0.001);
+    if (fuel <= 0) { speed = 0; rpm = 0; }
+    rpm = speed * 40;
+    drawGauge('speedGauge', speed, 240, '#e63946');
+    drawGauge('rpmGauge', rpm, 9000, '#f59e0b');
+    drawGauge('fuelGauge', fuel, 100, '#10b981');
+    const sv = document.getElementById('speedVal');
+    const rv = document.getElementById('rpmVal');
+    const fv = document.getElementById('fuelVal');
+    if (sv) sv.textContent = Math.round(speed);
+    if (rv) rv.textContent = Math.round(rpm);
+    if (fv) fv.textContent = Math.round(fuel);
+    window._gameRAF = requestAnimationFrame(update);
+  }
+
+  document.getElementById('gasBtn').addEventListener('mousedown', () => { if (fuel > 0) { speed = Math.min(240, speed + 15); SFX.engine(speed/240); } });
+  document.getElementById('brakeBtn').addEventListener('mousedown', () => { speed = Math.max(0, speed - 25); if (speed > 10) SFX.screech(); });
+  document.getElementById('honkBtn').addEventListener('click', () => SFX.honk());
+
+  // Auto decel
+  setInterval(() => { if (speed > 0) speed = Math.max(0, speed - 2); }, 100);
+  update();
+}
+
+// ── Reward 2: Controllable Car ──
+function buildControls(el) {
+  el.innerHTML = `
+    <div class="game-container">
+      <div class="game-titlebar">
+        <h3>CAR CONTROLS</h3>
+        <div class="game-stats">Use arrow keys to drive!</div>
+      </div>
+      <canvas id="gameCanvas" width="400" height="500"></canvas>
+      <div class="game-controls-info">
+        <span><kbd>↑</kbd> Gas &nbsp; <kbd>↓</kbd> Brake &nbsp; <kbd>←</kbd><kbd>→</kbd> Steer &nbsp; <kbd>Space</kbd> Honk</span>
+      </div>
+    </div>
+  `;
+
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  let carX = 180, carY = 400, speed = 0;
+  const keys = {};
+  const kd = (e) => { keys[e.key] = true; if (['ArrowUp','ArrowDown',' '].includes(e.key)) e.preventDefault(); if (e.key === ' ') SFX.honk(); };
+  const ku = (e) => { keys[e.key] = false; };
+  document.addEventListener('keydown', kd);
+  document.addEventListener('keyup', ku);
+
+  let roadOffset = 0;
+
+  function loop() {
+    if (keys['ArrowUp']) speed = Math.min(8, speed + 0.3);
+    if (keys['ArrowDown']) speed = Math.max(0, speed - 0.5);
+    if (keys['ArrowLeft']) carX = Math.max(30, carX - 4);
+    if (keys['ArrowRight']) carX = Math.min(370, carX + 4);
+    speed *= 0.98; // friction
+    roadOffset = (roadOffset + speed * 2) % 40;
+    if (speed > 1) SFX.engine(speed/8, 0.05);
+
+    // Draw
+    ctx.fillStyle = '#1a1a2e'; ctx.fillRect(0, 0, 400, 500);
+
+    // Road
+    ctx.fillStyle = '#2d2d3d'; ctx.fillRect(60, 0, 280, 500);
+    ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 3; ctx.setLineDash([20, 15]);
+    ctx.lineDashOffset = -roadOffset;
+    ctx.beginPath(); ctx.moveTo(200, 0); ctx.lineTo(200, 500); ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Side lines
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(60, 0); ctx.lineTo(60, 500); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(340, 0); ctx.lineTo(340, 500); ctx.stroke();
+
+    // Car
+    drawCarTopDown(ctx, carX, carY, 36, 60, '#e63946');
+
+    // Speed display
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Orbitron, monospace';
+    ctx.fillText(`${Math.round(speed * 30)} km/h`, 10, 25);
+
+    window._gameRAF = requestAnimationFrame(loop);
+  }
+
+  // Cleanup old listeners on exit
+  const origGoMap = window.goMap;
+  window.goMap = () => { document.removeEventListener('keydown', kd); document.removeEventListener('keyup', ku); origGoMap(); window.goMap = origGoMap; };
+
+  loop();
+}
+
+// ── Reward 3: Dodge Racer ──
+function buildRacer(el) {
+  el.innerHTML = `
+    <div class="game-container">
+      <div class="game-titlebar">
+        <h3>DODGE RACER</h3>
+        <div class="game-stats">Score: <span id="rScore">0</span> &nbsp; Best: <span id="rBest">${localStorage.getItem('jsq_best')||0}</span></div>
+      </div>
+      <canvas id="gameCanvas" width="400" height="550"></canvas>
+      <div class="game-controls-info">
+        <span><kbd>←</kbd><kbd>→</kbd> Dodge &nbsp; <kbd>↑</kbd> Speed up &nbsp; <kbd>Space</kbd> Honk at obstacles</span>
+        <button class="btn-sm" id="rStart">START</button>
+      </div>
+    </div>
+  `;
+
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  let carX = 180, speed = 3, score = 0, alive = false, obstacles = [], roadOff = 0, coins = [];
+  const keys = {};
+  const kd = (e) => { keys[e.key] = true; if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault(); if (e.key === ' ') SFX.honk(); };
+  const ku = (e) => { keys[e.key] = false; };
+  document.addEventListener('keydown', kd);
+  document.addEventListener('keyup', ku);
+
+  document.getElementById('rStart').onclick = () => {
+    carX = 180; speed = 3; score = 0; alive = true;
+    obstacles = []; coins = [];
+    document.getElementById('rStart').textContent = 'RESTART';
+    SFX.engine(0.5);
+  };
+
+  let frame = 0;
+  function loop() {
+    frame++;
+    ctx.fillStyle = '#0a0a14'; ctx.fillRect(0, 0, 400, 550);
+
+    if (alive) {
+      if (keys['ArrowLeft']) carX = Math.max(75, carX - 5);
+      if (keys['ArrowRight']) carX = Math.min(325, carX + 5);
+      if (keys['ArrowUp']) speed = Math.min(10, speed + 0.1);
+
+      speed += 0.001; // gradually increase difficulty
+      roadOff = (roadOff + speed * 2) % 40;
+
+      // Spawn obstacles
+      if (frame % Math.max(20, 50 - Math.floor(speed * 3)) === 0) {
+        obstacles.push({ x: 70 + Math.random() * 240, y: -40, w: 36, h: 56, color: ['#3b82f6','#8b5cf6','#06b6d4'][Math.floor(Math.random()*3)] });
+      }
+      // Spawn coins
+      if (frame % 45 === 0) {
+        coins.push({ x: 80 + Math.random() * 230, y: -20 });
+      }
+
+      // Move obstacles
+      obstacles.forEach(o => o.y += speed * 1.5);
+      obstacles = obstacles.filter(o => o.y < 600);
+      coins.forEach(c => c.y += speed * 1.2);
+      coins = coins.filter(c => c.y < 600);
+
+      // Collision check
+      const carRect = { x: carX - 18, y: 430, width: 36, height: 56 };
+      for (const o of obstacles) {
+        const oRect = { x: o.x - o.w/2, y: o.y - o.h/2, width: o.w, height: o.h };
+        if (carRect.x < oRect.x + oRect.width && carRect.x + carRect.width > oRect.x &&
+            carRect.y < oRect.y + oRect.height && carRect.y + carRect.height > oRect.y) {
+          alive = false; SFX.crash();
+          const best = parseInt(localStorage.getItem('jsq_best') || 0);
+          if (score > best) localStorage.setItem('jsq_best', score);
+          document.getElementById('rBest').textContent = Math.max(score, best);
+          break;
+        }
+      }
+
+      // Coin collection
+      coins = coins.filter(c => {
+        if (Math.abs(c.x - carX) < 25 && Math.abs(c.y - 450) < 30) {
+          score += 10; SFX.coin(); return false;
+        }
+        return true;
+      });
+
+      score += Math.floor(speed * 0.1);
+      document.getElementById('rScore').textContent = score;
+
+      if (frame % 6 === 0 && speed > 2) SFX.engine(speed/10, 0.04);
+    }
+
+    // Draw road
+    ctx.fillStyle = '#2d2d3d'; ctx.fillRect(60, 0, 280, 550);
+    ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 2; ctx.setLineDash([20, 15]);
+    ctx.lineDashOffset = -roadOff;
+    [140, 200, 260].forEach(lx => { ctx.beginPath(); ctx.moveTo(lx, 0); ctx.lineTo(lx, 550); ctx.stroke(); });
+    ctx.setLineDash([]);
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(60, 0); ctx.lineTo(60, 550); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(340, 0); ctx.lineTo(340, 550); ctx.stroke();
+
+    // Draw obstacles (other cars)
+    obstacles.forEach(o => drawCarTopDown(ctx, o.x, o.y, o.w, o.h, o.color));
+
+    // Draw coins
+    coins.forEach(c => {
+      ctx.fillStyle = '#fbbf24';
+      ctx.beginPath(); ctx.arc(c.x, c.y, 8, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#92400e'; ctx.font = 'bold 10px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('$', c.x, c.y + 3.5);
+    });
+
+    // Draw player
+    drawCarTopDown(ctx, carX, 450, 36, 56, '#e63946');
+
+    // Speed indicator
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 13px Orbitron, monospace'; ctx.textAlign = 'left';
+    ctx.fillText(`${Math.round(speed * 30)} km/h`, 8, 22);
+
+    if (!alive && frame > 10) {
+      ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(0, 200, 400, 150);
+      ctx.fillStyle = '#e63946'; ctx.font = 'bold 28px Orbitron, monospace'; ctx.textAlign = 'center';
+      ctx.fillText('CRASHED!', 200, 260);
+      ctx.fillStyle = '#fff'; ctx.font = '16px Inter, sans-serif';
+      ctx.fillText(`Score: ${score}`, 200, 295);
+      ctx.fillStyle = '#94a3b8'; ctx.font = '13px Inter, sans-serif';
+      ctx.fillText('Press START to try again', 200, 325);
+    }
+
+    window._gameRAF = requestAnimationFrame(loop);
+  }
+
+  const origGoMap = window.goMap;
+  window.goMap = () => { document.removeEventListener('keydown', kd); document.removeEventListener('keyup', ku); origGoMap(); window.goMap = origGoMap; };
+
+  loop();
+}
+
+// ── Reward 4: Car Tuner ──
+function buildTuner(el) {
+  el.innerHTML = `
+    <div class="story-card">
+      <h2>🔧 Car Tuner</h2>
+      <p>Use closures in action! Each slider creates a closure that remembers its setting.</p>
+    </div>
+    <div class="game-container">
+      <div class="game-titlebar"><h3>TUNE YOUR RIDE</h3><div class="game-stats" id="tunerStats">Power: <span>100</span> HP</div></div>
+      <canvas id="gameCanvas" width="400" height="300"></canvas>
+      <div style="padding:16px;display:flex;flex-direction:column;gap:12px;">
+        <label style="color:var(--text-dim);font-size:0.85rem;">Engine Power: <input type="range" id="tPower" min="50" max="500" value="150" style="width:200px;"> <span id="tPowerVal">150</span> HP</label>
+        <label style="color:var(--text-dim);font-size:0.85rem;">Car Color: <input type="color" id="tColor" value="#e63946"></label>
+        <label style="color:var(--text-dim);font-size:0.85rem;">Turbo: <input type="checkbox" id="tTurbo"> <span id="tTurboLabel">Off</span></label>
+        <label style="color:var(--text-dim);font-size:0.85rem;">Exhaust Sound: <input type="range" id="tExhaust" min="1" max="10" value="5" style="width:200px;"> <span id="tExhaustVal">5</span></label>
+        <button class="btn btn-p" id="tRevBtn" style="width:fit-content;">🔊 Rev Engine!</button>
+      </div>
+    </div>
+  `;
+
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  let shake = 0, color = '#e63946', turbo = false, power = 150;
+
+  function draw() {
+    ctx.clearRect(0, 0, 400, 300);
+    ctx.fillStyle = '#0a0a14'; ctx.fillRect(0, 0, 400, 300);
+
+    const sx = (Math.random() - 0.5) * shake;
+    const sy = (Math.random() - 0.5) * shake;
+
+    // Draw car (side view style)
+    ctx.save(); ctx.translate(200 + sx, 180 + sy);
+
+    // Body
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(-80, 0); ctx.lineTo(-60, -40); ctx.lineTo(30, -40);
+    ctx.lineTo(70, -10); ctx.lineTo(80, 0); ctx.lineTo(80, 20);
+    ctx.lineTo(-80, 20); ctx.closePath(); ctx.fill();
+
+    // Windows
+    ctx.fillStyle = 'rgba(100,200,255,0.3)';
+    ctx.beginPath(); ctx.moveTo(-55, -38); ctx.lineTo(-20, -38); ctx.lineTo(-20, -5); ctx.lineTo(-55, -5); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-15, -38); ctx.lineTo(25, -38); ctx.lineTo(55, -10); ctx.lineTo(-15, -5); ctx.closePath(); ctx.fill();
+
+    // Wheels
+    ctx.fillStyle = '#333';
+    ctx.beginPath(); ctx.arc(-45, 25, 18, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(50, 25, 18, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#666';
+    ctx.beginPath(); ctx.arc(-45, 25, 10, 0, Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(50, 25, 10, 0, Math.PI*2); ctx.fill();
+
+    // Turbo flame
+    if (turbo && shake > 0.5) {
+      ctx.fillStyle = `hsl(${30 + Math.random()*20}, 100%, ${50 + Math.random()*30}%)`;
+      const fl = 15 + Math.random() * power * 0.1;
+      ctx.beginPath(); ctx.moveTo(-80, 5); ctx.lineTo(-80 - fl, 10);
+      ctx.lineTo(-80, 15); ctx.closePath(); ctx.fill();
+    }
+
+    // Headlights glow
+    ctx.fillStyle = 'rgba(255,215,0,0.6)';
+    ctx.beginPath(); ctx.arc(78, -3, 5, 0, Math.PI*2); ctx.fill();
+
+    ctx.restore();
+
+    // Power text
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 14px Orbitron, monospace'; ctx.textAlign = 'center';
+    ctx.fillText(`${power} HP ${turbo ? '+ TURBO 🔥' : ''}`, 200, 30);
+
+    shake *= 0.95;
+    window._gameRAF = requestAnimationFrame(draw);
+  }
+
+  document.getElementById('tPower').oninput = (e) => { power = parseInt(e.target.value); document.getElementById('tPowerVal').textContent = power; };
+  document.getElementById('tColor').oninput = (e) => { color = e.target.value; };
+  document.getElementById('tTurbo').onchange = (e) => { turbo = e.target.checked; document.getElementById('tTurboLabel').textContent = turbo ? 'ON 🔥' : 'Off'; };
+  document.getElementById('tRevBtn').onclick = () => {
+    const exhaust = parseInt(document.getElementById('tExhaust').value);
+    shake = power * 0.03;
+    SFX.engine(power / 500, 0.2 + exhaust * 0.05);
+    if (turbo) { setTimeout(() => SFX.boost(), 200); }
+  };
+  document.getElementById('tExhaust').oninput = (e) => { document.getElementById('tExhaustVal').textContent = e.target.value; };
+
+  draw();
+}
+
+// ── Reward 5: Garage ──
+function buildGarage(el) {
+  let garage = [
+    { name: 'Street Racer', hp: 150, color: '#e63946', turbo: false },
+    { name: 'Night Runner', hp: 280, color: '#3b82f6', turbo: false },
+    { name: 'Thunder Bolt', hp: 420, color: '#f59e0b', turbo: true },
+  ];
+  let selected = 0;
+
+  function render() {
+    el.innerHTML = `
+      <div class="story-card">
+        <h2>🏪 Your Garage</h2>
+        <p>Manage your car collection! Destructuring & spread in action.</p>
+      </div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;">
+        ${garage.map((c, i) => `
+          <div onclick="window._selectCar(${i})" style="flex:1;min-width:140px;padding:14px;background:var(--surface);border:2px solid ${i===selected?'var(--accent)':'var(--border)'};border-radius:12px;cursor:pointer;text-align:center;">
+            <div style="font-size:2rem;margin-bottom:6px;">🏎️</div>
+            <div style="font-weight:700;font-size:0.9rem;">${c.name}</div>
+            <div style="color:var(--text-dim);font-size:0.8rem;">${c.hp} HP ${c.turbo?'🔥':''}</div>
+            <div style="width:24px;height:24px;border-radius:50%;background:${c.color};margin:8px auto 0;border:2px solid var(--border);"></div>
+          </div>
+        `).join('')}
+        <div onclick="window._addCar()" style="flex:1;min-width:140px;padding:14px;background:var(--surface2);border:2px dashed var(--border);border-radius:12px;cursor:pointer;text-align:center;display:flex;align-items:center;justify-content:center;font-size:2rem;color:var(--text-dim);">+</div>
+      </div>
+      <div class="ch-card">
+        <h3>Selected: ${garage[selected].name}</h3>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-p" onclick="window._upgradeCar()">⬆ Upgrade (+50 HP)</button>
+          <button class="btn btn-s" onclick="window._toggleTurbo()">🔥 Toggle Turbo</button>
+          <button class="btn btn-s" onclick="window._paintCar()">🎨 Random Paint</button>
+          ${garage.length > 1 ? `<button class="btn btn-s" onclick="window._removeCar()" style="color:#ef4444;">🗑️ Sell</button>` : ''}
+        </div>
+        <div class="console" style="margin-top:12px;" id="garageLog">Tap a car to select it...</div>
+      </div>
+    `;
+  }
+
+  window._selectCar = (i) => { selected = i; render(); SFX.coin(); };
+  window._addCar = () => {
+    const names = ['Viper', 'Phantom', 'Blaze', 'Shadow', 'Rocket', 'Storm'];
+    const newCar = {
+      name: names[Math.floor(Math.random() * names.length)] + ' ' + (garage.length + 1),
+      hp: 100 + Math.floor(Math.random() * 200),
+      color: '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0'),
+      turbo: false
+    };
+    garage = [...garage, newCar];
+    selected = garage.length - 1;
+    SFX.coin(); render();
+  };
+  window._upgradeCar = () => {
+    garage = garage.map((c, i) => i === selected ? { ...c, hp: c.hp + 50 } : c);
+    SFX.boost(); render();
+  };
+  window._toggleTurbo = () => {
+    garage = garage.map((c, i) => i === selected ? { ...c, turbo: !c.turbo } : c);
+    SFX.engine(0.7); render();
+  };
+  window._paintCar = () => {
+    const color = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+    garage = garage.map((c, i) => i === selected ? { ...c, color } : c);
+    render();
+  };
+  window._removeCar = () => {
+    garage = garage.filter((_, i) => i !== selected);
+    selected = Math.min(selected, garage.length - 1);
+    SFX.screech(); render();
+  };
+
+  render();
+}
+
+// ── Reward 6: Full Racing Game ──
+function buildFullGame(el) {
+  el.innerHTML = `
+    <div class="game-container">
+      <div class="game-titlebar">
+        <h3>SPEED RACER — THE GAME</h3>
+        <div class="game-stats">
+          Score: <span id="fScore">0</span> &nbsp;
+          Combo: <span id="fCombo">x1</span> &nbsp;
+          Best: <span id="fBest">${localStorage.getItem('jsq_fullbest')||0}</span>
+        </div>
+      </div>
+      <canvas id="gameCanvas" width="400" height="550"></canvas>
+      <div class="game-controls-info">
+        <span><kbd>←</kbd><kbd>→</kbd> Steer &nbsp; <kbd>↑</kbd> Boost &nbsp; <kbd>Space</kbd> Honk &nbsp; <kbd>B</kbd> Switch Bike</span>
+        <button class="btn-sm" id="fStart">🏁 RACE!</button>
+      </div>
+    </div>
+  `;
+
+  const canvas = document.getElementById('gameCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = 400, H = 550;
+  let state = { alive: false, score: 0, combo: 0, multiplier: 1, speed: 3, carX: 200, isBike: false, obstacles: [], coins: [], boostFuel: 100, boosting: false, roadOff: 0, frame: 0, shake: 0 };
+
+  const keys = {};
+  const kd = (e) => {
+    keys[e.key] = true;
+    if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+    if (e.key === ' ') SFX.honk();
+    if (e.key === 'b' || e.key === 'B') state.isBike = !state.isBike;
+  };
+  const ku = (e) => { keys[e.key] = false; };
+  document.addEventListener('keydown', kd);
+  document.addEventListener('keyup', ku);
+
+  document.getElementById('fStart').onclick = () => {
+    state = { ...state, alive: true, score: 0, combo: 0, multiplier: 1, speed: 3.5, carX: 200, obstacles: [], coins: [], boostFuel: 100, boosting: false, frame: 0, shake: 0 };
+    document.getElementById('fStart').textContent = '🔄 RESTART';
+    SFX.engine(0.6);
+  };
+
+  function loop() {
+    state.frame++;
+    const s = state;
+
+    if (s.alive) {
+      // Controls
+      const steerSpeed = s.isBike ? 6 : 5;
+      if (keys['ArrowLeft']) s.carX = Math.max(75, s.carX - steerSpeed);
+      if (keys['ArrowRight']) s.carX = Math.min(325, s.carX + steerSpeed);
+      if (keys['ArrowUp'] && s.boostFuel > 0) {
+        s.boosting = true; s.boostFuel = Math.max(0, s.boostFuel - 1);
+        s.speed = Math.min(12, s.speed + 0.2);
+      } else {
+        s.boosting = false;
+      }
+
+      s.speed += 0.0008;
+      s.roadOff = (s.roadOff + s.speed * 2) % 40;
+      if (!s.boosting) s.boostFuel = Math.min(100, s.boostFuel + 0.15);
+
+      // Spawn
+      if (s.frame % Math.max(15, 45 - Math.floor(s.speed * 2)) === 0) {
+        const lane = 85 + Math.floor(Math.random() * 4) * 65;
+        s.obstacles.push({ x: lane, y: -50, w: 34, h: 52, color: ['#3b82f6','#8b5cf6','#06b6d4','#10b981'][Math.floor(Math.random()*4)] });
+      }
+      if (s.frame % 35 === 0) s.coins.push({ x: 80 + Math.random() * 230, y: -20 });
+
+      // Move
+      s.obstacles.forEach(o => o.y += s.speed * 1.6);
+      s.obstacles = s.obstacles.filter(o => {
+        if (o.y > H + 50) { s.combo++; if (s.combo >= 10) s.multiplier = 3; else if (s.combo >= 5) s.multiplier = 2; return false; }
+        return true;
+      });
+      s.coins.forEach(c => c.y += s.speed * 1.3);
+      s.coins = s.coins.filter(c => c.y < H + 30);
+
+      // Collision
+      const pw = s.isBike ? 14 : 34, ph = s.isBike ? 44 : 52;
+      const pr = { x: s.carX - pw/2, y: 440 - ph/2, width: pw, height: ph };
+      for (const o of s.obstacles) {
+        const or = { x: o.x - o.w/2, y: o.y - o.h/2, width: o.w, height: o.h };
+        if (pr.x < or.x + or.width && pr.x + pr.width > or.x && pr.y < or.y + or.height && pr.y + pr.height > or.y) {
+          s.alive = false; s.shake = 10; SFX.crash();
+          const best = parseInt(localStorage.getItem('jsq_fullbest') || 0);
+          if (s.score > best) localStorage.setItem('jsq_fullbest', s.score);
+          document.getElementById('fBest').textContent = Math.max(s.score, best);
+          break;
+        }
+      }
+
+      // Coin pickup
+      s.coins = s.coins.filter(c => {
+        if (Math.abs(c.x - s.carX) < 22 && Math.abs(c.y - 440) < 28) {
+          s.score += 10 * s.multiplier; s.combo++;
+          if (s.combo >= 10) s.multiplier = 3; else if (s.combo >= 5) s.multiplier = 2;
+          SFX.coin(); return false;
+        }
+        return true;
+      });
+
+      s.score += Math.floor(s.speed * 0.1 * s.multiplier);
+      document.getElementById('fScore').textContent = s.score;
+      document.getElementById('fCombo').textContent = `x${s.multiplier}`;
+
+      if (s.frame % 8 === 0 && s.speed > 2) SFX.engine(s.speed/12, 0.03);
+      if (s.boosting && s.frame % 15 === 0) SFX.boost();
+    }
+
+    // ── DRAW ──
+    const sx = (Math.random()-0.5) * s.shake;
+    const sy = (Math.random()-0.5) * s.shake;
+    s.shake *= 0.9;
+
+    ctx.save(); ctx.translate(sx, sy);
+    ctx.fillStyle = '#0a0a14'; ctx.fillRect(0, 0, W, H);
+
+    // Road
+    ctx.fillStyle = '#2d2d3d'; ctx.fillRect(55, 0, 290, H);
+
+    // Grass details
+    ctx.fillStyle = '#1a2e1a'; ctx.fillRect(0, 0, 55, H); ctx.fillRect(345, 0, 55, H);
+
+    // Lane lines
+    ctx.strokeStyle = '#f59e0b44'; ctx.lineWidth = 2; ctx.setLineDash([20, 15]);
+    ctx.lineDashOffset = -s.roadOff;
+    [125, 200, 275].forEach(x => { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); });
+    ctx.setLineDash([]);
+
+    // Edge lines
+    ctx.strokeStyle = '#ffffff88'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(55, 0); ctx.lineTo(55, H); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(345, 0); ctx.lineTo(345, H); ctx.stroke();
+
+    // Obstacles
+    s.obstacles.forEach(o => drawCarTopDown(ctx, o.x, o.y, o.w, o.h, o.color));
+
+    // Coins
+    s.coins.forEach(c => {
+      ctx.fillStyle = '#fbbf24';
+      ctx.beginPath(); ctx.arc(c.x, c.y, 9, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#92400e'; ctx.font = 'bold 11px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText('$', c.x, c.y + 4);
+    });
+
+    // Player
+    if (s.isBike) {
+      drawBikeTopDown(ctx, s.carX, 440, 44, '#e63946');
+    } else {
+      drawCarTopDown(ctx, s.carX, 440, 34, 52, '#e63946');
+    }
+
+    // Boost flame
+    if (s.boosting && s.alive) {
+      ctx.fillStyle = `hsl(${25+Math.random()*15}, 100%, ${50+Math.random()*30}%)`;
+      const fl = 10 + Math.random() * 15;
+      ctx.beginPath(); ctx.moveTo(s.carX - 6, 468); ctx.lineTo(s.carX, 468 + fl);
+      ctx.lineTo(s.carX + 6, 468); ctx.closePath(); ctx.fill();
+    }
+
+    // HUD
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 13px Orbitron, monospace'; ctx.textAlign = 'left';
+    ctx.fillText(`${Math.round(s.speed * 30)} km/h`, 8, 22);
+    if (s.multiplier > 1) { ctx.fillStyle = s.multiplier >= 3 ? '#f59e0b' : '#10b981'; ctx.fillText(`COMBO x${s.multiplier}`, 8, 42); }
+
+    // Boost bar
+    ctx.fillStyle = '#333'; ctx.fillRect(W - 25, 10, 12, 100);
+    ctx.fillStyle = s.boosting ? '#f59e0b' : '#3b82f6';
+    ctx.fillRect(W - 25, 10 + (100 - s.boostFuel), 12, s.boostFuel);
+    ctx.fillStyle = '#fff'; ctx.font = '8px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('NOS', W - 19, 122);
+
+    // Game over
+    if (!s.alive && s.frame > 10) {
+      ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.fillRect(0, 180, W, 180);
+      ctx.fillStyle = '#e63946'; ctx.font = 'bold 32px Orbitron, monospace'; ctx.textAlign = 'center';
+      ctx.fillText('WRECKED!', W/2, 240);
+      ctx.fillStyle = '#fff'; ctx.font = '18px Inter, sans-serif';
+      ctx.fillText(`Score: ${s.score}`, W/2, 275);
+      ctx.fillStyle = '#94a3b8'; ctx.font = '13px Inter, sans-serif';
+      ctx.fillText(`${s.isBike ? '🏍️ Bike' : '🏎️ Car'} mode  •  Press RACE to retry`, W/2, 305);
+      ctx.fillText(`Tip: Press B to switch vehicle!`, W/2, 330);
+    }
+
+    ctx.restore();
+    window._gameRAF = requestAnimationFrame(loop);
+  }
+
+  const origGoMap = window.goMap;
+  window.goMap = () => { document.removeEventListener('keydown', kd); document.removeEventListener('keyup', ku); origGoMap(); window.goMap = origGoMap; };
+
+  loop();
+}
+
+// ── Init ──
+goMap();
+updateBar();
+</script>
+</body>
+</html>

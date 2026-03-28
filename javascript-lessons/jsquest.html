@@ -551,7 +551,7 @@ const LEVELS = [
             return { pass: true };
           } catch(e) { return { pass: false, msg: e.message }; }
         },
-        hint: 'Use let age = <some number>;'
+        hint: 'Declare a variable with the correct keyword and name, then assign any number to it.'
       }
     ]
   },
@@ -603,7 +603,7 @@ const LEVELS = [
             return { pass: false, msg: `Expected "HELLO" but got "${r}"` };
           } catch(e) { return { pass: false, msg: e.message }; }
         },
-        hint: 'Use msg.toUpperCase() and store it in result'
+        hint: 'There\'s a string method that converts all letters to uppercase. Call it on msg and store the return value in a new variable.'
       },
       {
         type: 'mcq',
@@ -655,7 +655,7 @@ const LEVELS = [
             return { pass: true };
           } catch(e) { return { pass: false, msg: e.message }; }
         },
-        hint: 'let colors = ["red","blue","green"]; colors.push("gold");'
+        hint: 'Create an array with any 3 color strings, then use the method that adds to the END of an array'
       },
       {
         type: 'fill',
@@ -721,7 +721,7 @@ const LEVELS = [
             return { pass: true };
           } catch(e) { return { pass: false, msg: e.message }; }
         },
-        hint: 'Use if (age >= 18) { return "Yes"; } else { return "No"; }'
+        hint: 'Compare the age parameter against 18 using >=. Return the string "Yes" or "No" based on the comparison.'
       },
       {
         type: 'mcq',
@@ -846,7 +846,7 @@ const LEVELS = [
             return { pass: true };
           } catch(e) { return { pass: false, msg: e.message }; }
         },
-        hint: 'function double(n) { return n * 2; }'
+        hint: 'Define a function that takes one parameter. Inside, return that parameter multiplied by 2.'
       },
       {
         type: 'code',
@@ -862,7 +862,7 @@ const LEVELS = [
             return { pass: true };
           } catch(e) { return { pass: false, msg: e.message }; }
         },
-        hint: 'Use the modulo operator: n % 2 === 0'
+        hint: 'Even numbers have no remainder when divided by 2. There\'s an operator (%) that gives you the remainder.'
       },
       {
         type: 'code',
@@ -878,7 +878,7 @@ const LEVELS = [
             return { pass: true };
           } catch(e) { return { pass: false, msg: e.message }; }
         },
-        hint: 'Use str[0].toUpperCase() + str.slice(1).toLowerCase()'
+        hint: 'Break it into two parts: get the first character and make it upper, get everything AFTER the first character and make it lower. Then combine them.'
       }
     ]
   },
@@ -922,7 +922,7 @@ const LEVELS = [
             return { pass: true };
           } catch(e) { return { pass: false, msg: e.message }; }
         },
-        hint: 'return { name: name, age: age }; — or use shorthand { name, age }'
+        hint: 'Return a new object with two properties matching the parameter names. JS has a shorthand when the key name matches the variable name.'
       },
       {
         type: 'code',
@@ -937,7 +937,7 @@ const LEVELS = [
             return { pass: true };
           } catch(e) { return { pass: false, msg: e.message }; }
         },
-        hint: 'return person.first + " " + person.last'
+        hint: 'Access the two properties from the object parameter and join them with a space between.'
       }
     ]
   },
@@ -980,7 +980,7 @@ const LEVELS = [
             return { pass: true };
           } catch(e) { return { pass: false, msg: e.message }; }
         },
-        hint: 'return nums.filter(n => n % 2 === 0);'
+        hint: 'Use .filter() with a test function. What condition makes a number even? (Think remainder)'
       },
       {
         type: 'code',
@@ -994,7 +994,7 @@ const LEVELS = [
             return { pass: true };
           } catch(e) { return { pass: false, msg: e.message }; }
         },
-        hint: 'return words.map(w => w.toUpperCase());'
+        hint: 'Use .map() to transform each word. What string method converts to all caps?'
       },
       {
         type: 'code',
@@ -1009,7 +1009,7 @@ const LEVELS = [
             return { pass: true };
           } catch(e) { return { pass: false, msg: e.message }; }
         },
-        hint: 'return nums.reduce((acc, n) => acc * n, 1);'
+        hint: 'Reduce combines all values into one. The accumulator starts at 1 (not 0 — why?). Each step, multiply the accumulator by the current number.'
       }
     ]
   },
@@ -1088,7 +1088,7 @@ const LEVELS = [
             return { pass: true };
           } catch(e) { return { pass: false, msg: e.message }; }
         },
-        hint: 'Convert to lowercase, then reverse the string and compare. To reverse: str.split("").reverse().join("")'
+        hint: 'First normalize the case. Then figure out how to reverse a string — JS doesn\'t have a direct method, but arrays do. Can you convert a string to an array of characters?'
       }
     ]
   }
